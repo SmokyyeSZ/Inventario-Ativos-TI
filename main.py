@@ -10,12 +10,14 @@
 [BLOCO: Persistencia de dados]
     [SEÇÃO: Variaveis_dados  ]
     [SEÇÃO: Funções_dados    ]
-
-[BLOCO: Base de Dados]
-
+    
 [BLOCO: Crud, Validações e Interface]
     [SEÇÃO: DEF_validações          ]
     [SEÇÃO: Interface               ]
+
+[BLOCO: Base de Dados]
+
+[BLOCO: Iniciar]
 
 """
 
@@ -85,12 +87,6 @@ def salvar_dados(dados):
             json.dump(dados, arquivo, indent=4, ensure_ascii=False)
     except Exception as e:
         print(f"Erro ao salvar os dados: {e}")
-
-#[------------------------ ------------------------]
-#|               BLOCO: Base de Dados              |
-#[------------------------ ------------------------]
-
-inventario = carregar_dados()
 
 #[------------------------ ------------------------]
 #|       BLOCO: Crud, Validações e Interface       |
@@ -206,6 +202,16 @@ def menu_principal():
             case _:
                 print("\nErro: Opção inválida. Escolha um número do menu.")
 
+#[------------------------ ------------------------]
+#|               BLOCO: Base de Dados              |
+#[------------------------ ------------------------]
+
+
+inventario = carregar_dados()
+
+#[------------------------ ------------------------]
+#|             BLOCO: Iniciar Programa             |
+#[------------------------ ------------------------]
 
 if __name__ == "__main__":
     menu_principal()
