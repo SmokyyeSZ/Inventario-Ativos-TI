@@ -10,12 +10,14 @@
 [BLOCO: Persistencia de dados]
     [SEÇÃO: Variaveis_dados  ]
     [SEÇÃO: Funções_dados    ]
-
-[BLOCO: Base de Dados]
-
+    
 [BLOCO: Crud, Validações e Interface]
     [SEÇÃO: DEF_validações          ]
     [SEÇÃO: Interface               ]
+
+[BLOCO: Base de Dados]
+
+[BLOCO: Iniciar]
 
 """
 
@@ -87,12 +89,6 @@ def salvar_dados(dados):
         print(f"Erro ao salvar os dados: {e}")
 
 #[------------------------ ------------------------]
-#|               BLOCO: Base de Dados              |
-#[------------------------ ------------------------]
-
-inventario = carregar_dados()
-
-#[------------------------ ------------------------]
 #|       BLOCO: Crud, Validações e Interface       |
 #[------------------------ ------------------------]
 
@@ -113,8 +109,8 @@ def cadastrar_ativos():
         print(f"\nErro: Já existe um ativo cadastrado com o ID {id_ativo}")
         return
 
-    nome_ativo = input("Digite o nome do ativo (ex: Servidor Web, Notebook Dell): ")
-    departamento = input("Digite o departamento (ex: RH, TI, Financeiro): ")
+    nome_ativo = input("Digite o nome do ativo (ex: Servidor Web, Notebook Dell): ").strip()
+    departamento = input("Digite o departamento (ex: RH, TI, Financeiro): ").strip()
 
     #Capturando os enums com validação a prova de falhas
     tipo = ler_enum(TipoAtivo, "Selecione o Tipo de Ativo:")
@@ -137,6 +133,48 @@ def cadastrar_ativos():
     salvar_dados(inventario)
     print("Ativo cadastrado com sucesso!")
         
+
+def consultar_ativo():
+    """
+    Recebe um ID como parametro, busca e mostra o ativo ao qual o ID faz referencia
+    """
+
+    #Primeiro confirmamos se o Inventario existe
+    if not inventario:
+        print("[ERRO]: O inventario não existe ou não foi carregado corretamente.")
+        return
+
+    #Depois recebemos o ID do usuario validamos e tranformamos em string
+    info_Id = str(ler_inteiro("Digite o ID do ativo (número): "))
+
+    #Caso o ID exista retornamos as informações do ativo em questão
+    if info_Id in inventario:
+        print(f"[ENCONTRADO]: Informações do ID:\n")
+        for chave, valor in inventario[info_Id].items():
+            print(f"{chave}: {valor}\n")
+
+    else:
+        print(f"[AVISO]: O ID {info_Id}, não existe em nosso banco de dados.")
+        return
+    
+
+def listar_ativos():
+    """
+    Devolve ao usuario a lista dos ativos cadastrados em um formato mais resumido pra evitar poluir a tela
+    """
+
+    #Primeiro verificamos se o inventario foi devidamente carregado
+    if not inventario:
+        print("[ERRO]: O inventario não existe ou não foi carregado corretamente.")
+        return
+
+    print("--- ATIVOS CADASTRADOS ---")
+
+    #Agora faço um laço for para percorrer o inventario e formato de forma resumida o print com os resultados
+    for chave, valor in inventario.items():
+        print("~" * 50)
+        print(f"ID: {chave}: Nome: {valor['nome']}, Departamento: {valor['departamento']}, Tipo: {valor['tipo']}\n Severidade: {valor['severidade']}, Status: {valor['status']}")
+        print("~" * 50)
 
 
 #[             SEÇÃO: DEF_validações               ]
@@ -193,9 +231,9 @@ def menu_principal():
             case 1:
                 cadastrar_ativos()
             case 2:
-                print("\n[Módulo de Consulta em construção...]")
+                consultar_ativo()
             case 3:
-                print("\n[Módulo de Listagem em construção...]")
+                listar_ativos()
             case 4:
                 print("\n[Módulo de Atualização em construção...]")
             case 5:
@@ -206,6 +244,16 @@ def menu_principal():
             case _:
                 print("\nErro: Opção inválida. Escolha um número do menu.")
 
+#[------------------------ ------------------------]
+#|               BLOCO: Base de Dados              |
+#[------------------------ ------------------------]
+
+
+inventario = carregar_dados()
+
+#[------------------------ ------------------------]
+#|             BLOCO: Iniciar Programa             |
+#[------------------------ ------------------------]
 
 if __name__ == "__main__":
     menu_principal()
