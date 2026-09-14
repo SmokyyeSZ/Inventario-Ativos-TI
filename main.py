@@ -95,7 +95,7 @@ def cadastrar_ativos():
     """
     Coleta dados do usuário, verifica duplicidade de ID e adiciona um novo ativo.
     """
-    print("\n--- [ Módulo de cadastro ] ---")
+    print("\n--- [ Módulo de Cadastro ] ---")
 
     id_ativo = str(ler_inteiro("\033[36mDigite o ID do ativo (número): \033[0m"))
 
@@ -119,7 +119,7 @@ def cadastrar_ativos():
     }
 
     salvar_dados(inventario)
-    print("\033[32m[SUCESSO] Ativo cadastrado com sucesso!\033[0m")
+    print("\n\033[32m[SUCESSO] Ativo cadastrado com sucesso!\033[0m")
         
 
 def consultar_ativo():
@@ -130,15 +130,16 @@ def consultar_ativo():
         print("\033[31m[ERRO] O inventario não existe ou não foi carregado corretamente.\033[0m")
         return
 
+    print("\n--- [ Módulo de Consulta ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo (número): \033[0m"))
 
     if info_id in inventario:
         print(f"\n\033[32m[ENCONTRADO] Informações do ID:\033[0m")
         for chave, valor in inventario[info_id].items():
-            print(f"{chave}: {valor}")
+            print(f"{chave.capitalize()}: {valor}")
         print("")
     else:
-        print(f"\033[33m[AVISO] O ID {info_id} não existe em nosso banco de dados.\033[0m")
+        print(f"\n\033[33m[AVISO] O ID {info_id} não existe em nosso banco de dados.\033[0m")
         return
     
 
@@ -150,12 +151,12 @@ def listar_ativos():
         print("\033[31m[ERRO] O inventario não existe ou não foi carregado corretamente.\033[0m")
         return
 
-    print("\n--- ATIVOS CADASTRADOS ---")
+    print("\n--- [ ATIVOS CADASTRADOS ] ---")
 
     for chave, valor in inventario.items():
-        print("~" * 50)
+        print("~" * 60)
         print(f"ID: {chave} | Nome: {valor['nome']} | Departamento: {valor['departamento']} | Tipo: {valor['tipo']}\nSeveridade: {valor['severidade']} | Status: {valor['status']}")
-        print("~" * 50)
+    print("~" * 60)
 
 def atualizar_ativo():
     """
@@ -164,7 +165,8 @@ def atualizar_ativo():
     if not inventario:
         print("\033[31m[ERRO] O inventario não existe ou está vazio.\033[0m")
         return
-
+        
+    print("\n--- [ Módulo de Atualização ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo para atualizar (número): \033[0m"))
 
     if info_id in inventario:
@@ -204,12 +206,49 @@ def atualizar_ativo():
                 print("\033[31m[ERRO] Opção de modificação inválida.\033[0m")
                 return
 
-        # Chamada crucial para salvar a alteração no arquivo JSON!
         salvar_dados(inventario)
-        print("\033[32m[SUCESSO] Ativo atualizado com sucesso!\033[0m")
+        print("\n\033[32m[SUCESSO] Ativo atualizado com sucesso!\033[0m")
 
     else:
-        print(f"\033[33m[AVISO] O ID {info_id} não existe em nosso banco de dados.\033[0m")
+        print(f"\n\033[33m[AVISO] O ID {info_id} não existe em nosso banco de dados.\033[0m")
+        return
+
+def excluir_ativo():
+    """
+    Busca um ativo especifico no inventario e exclui os dados dele
+    """
+    if not inventario:
+        print("\033[31m[ERRO] O inventario não existe ou está vazio.\033[0m")
+        return
+
+    print("\n--- [ Módulo de Exclusão ] ---")
+    info_id = str(ler_inteiro("\033[36mDigite o ID do ativo que deseja excluir: \033[0m"))
+
+    if info_id in inventario:
+        print(f"\n\033[32m[ENCONTRADO] Informações atuais do ID:\033[0m")
+        for chave, valor in inventario[info_id].items():
+            print(f"{chave}: {valor}")
+
+        print("\nEscolha:\n 1 - Excluir ativo\n 2 - Voltar\n")
+
+        opcao = ler_inteiro("\033[36mDigite o numero da opção desejada: \033[0m")
+
+        match opcao:
+            case 1:
+                es = ler_inteiro("\033[33m[AVISO] O ativo será excluído para sempre. Escolha -> 1 - Confirmar Exclusão ou 2 - Cancelar: \033[0m")
+                if es == 1:
+                    del inventario[info_id]
+                    salvar_dados(inventario)
+                    print("\n\033[32m[SUCESSO] Ativo excluído com sucesso.\033[0m")
+                else:
+                    print("\n\033[36mOperação cancelada. Voltando ao menu...\033[0m")
+                    return
+            case 2:
+                print("\n\033[36mVoltando ao menu inicial...\033[0m")
+                return
+    else:
+        # Corrigido o erro do f-string aqui embaixo:
+        print(f"\n\033[33m[AVISO] O ID {info_id} não existe em nosso banco de dados.\033[0m")
         return
 
 #[             SEÇÃO: DEF_validações               ]
@@ -243,11 +282,23 @@ def ler_enum(classe_enum, mensagem):
 
 #[                 SEÇÃO: Interface                ]
 
+def limpar_tela():
+    """Limpa o terminal para manter a interface organizada."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def pausar():
+    """Pausa a execução até o usuário apertar ENTER."""
+    input("\n\033[36mPressione ENTER para continuar...\033[0m")
+
 def menu_principal():
     """
     Exibe o menu principal do sistema e gerencia a navegação entre as funcionalidades CRUD.
     """
+    # Adicionamos a pausa logo após o carregamento inicial dos dados, para você ver a mensagem de sucesso
+    pausar() 
+
     while True:
+        limpar_tela()
         print("\n--- Sistema de Inventário de Ativos de TI ---")
         print("1 - Cadastrar Ativo")
         print("2 - Consultar Ativo")
@@ -258,23 +309,31 @@ def menu_principal():
         print("---------------------------------------------")
         
         opcao = ler_inteiro("\033[36mDigite o numero da opção desejada: \033[0m")
+        
+        limpar_tela() # Limpa o menu antes de entrar na função escolhida
 
         match opcao:
             case 1:
                 cadastrar_ativos()
+                pausar()
             case 2:
                 consultar_ativo()
+                pausar()
             case 3:
                 listar_ativos()
+                pausar()
             case 4:
                 atualizar_ativo()
+                pausar()
             case 5:
-                print("\n\033[33m[Módulo de Exclusão em construção...]\033[0m")
+                excluir_ativo()
+                pausar()
             case 0:
                 print("\n\033[32mEncerrando o sistema. Até logo!\033[0m")
                 break
             case _:
                 print("\033[31m[ERRO] Opção inválida. Escolha um número do menu.\033[0m")
+                pausar()
 
 #[------------------------ ------------------------]
 #|               BLOCO: Base de Dados              |
