@@ -36,9 +36,10 @@ class Vulnerabilidade:
 
 class Ativo:
     """Representa um ativo de TI e armazena suas propriedades e vulnerabilidades."""
-    def __init__(self, id_ativo, nome, departamento, tipo):
+    def __init__(self, id_ativo, nome,responsavel, departamento, tipo):
         self.id_ativo = id_ativo
         self.nome = nome
+        self.responsavel = responsavel
         self.departamento = departamento
         self.tipo = tipo
         self.vulnerabilidades = [] # Lista inicial vazia de vulnerabilidades
@@ -49,6 +50,7 @@ class Ativo:
     def to_dict(self):
         return {
             "nome": self.nome,
+            "responsavel": self.responsavel,
             "departamento": self.departamento,
             "tipo": self.tipo,
             "vulnerabilidades": [vuln.to_dict() for vuln in self.vulnerabilidades]

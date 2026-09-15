@@ -49,10 +49,11 @@ def cadastrar_ativos():
         return
 
     nome_ativo = ler_texto("\033[36mDigite o nome ou hostname do ativo: \033[0m")
+    responsavel = ler_texto("\033[36mDigite o nome do responsável: \033[0m")
     departamento = ler_texto("\033[36mDigite o departamento/setor: \033[0m")
     tipo = ler_enum(TipoAtivo, "\033[36mSelecione o Tipo de Ativo:\033[0m")
 
-    novo_ativo = Ativo(id_ativo, nome_ativo, departamento, tipo)
+    novo_ativo = Ativo(id_ativo, nome_ativo,responsavel, departamento, tipo)
     
     print("\nDeseja registrar uma vulnerabilidade inicial para este ativo?")
     print("1 - Sim\n2 - Não")
@@ -82,6 +83,7 @@ def consultar_ativo():
         if chave == termo or valor["nome"].lower() == termo:
             print(f"\n\033[32m[ENCONTRADO] ID: {chave}\033[0m")
             print(f"Nome: {valor['nome']}")
+            print(f"Responsável: {valor.get('responsavel', 'Não informado')}")
             print(f"Departamento: {valor['departamento']}")
             print(f"Tipo: {valor['tipo']}")
             print(f"Total de Vulnerabilidades: {len(valor['vulnerabilidades'])}")
@@ -112,20 +114,21 @@ def atualizar_ativo():
 
     if info_id in gerenciador.inventario:
         print("-" * 50)
-        print("Escolha o que deseja modificar:\n 1 - Nome\n 2 - Departamento\n 3 - Tipo")
+        print("Escolha o que deseja modificar:\n 1 - Nome\n 2 - Responsável\n 3 - Departamento\n 4 - Tipo")
         print("-" * 50)
         escolha = ler_inteiro("\033[36mDigite a opção: \033[0m")
 
         match escolha:
             case 1:
-                # Aqui continuamos usando input normal para permitir que o usuario 
-                # cancele apertando ENTER (deixando vazio) sem prender no loop
                 n_nome = input("\033[36mNovo nome (ou aperte ENTER para cancelar): \033[0m").strip()
                 if n_nome: gerenciador.inventario[info_id]["nome"] = n_nome
-            case 2:
+            case 2: # <-- BLOCO NOVO
+                n_resp = input("\033[36mNovo responsável (ou aperte ENTER para cancelar): \033[0m").strip()
+                if n_resp: gerenciador.inventario[info_id]["responsavel"] = n_resp
+            case 3: # (O antigo case 2 virou 3)
                 n_dep = input("\033[36mNovo departamento (ou aperte ENTER para cancelar): \033[0m").strip()
                 if n_dep: gerenciador.inventario[info_id]["departamento"] = n_dep
-            case 3:
+            case 4: # (O antigo case 3 virou 4)
                 n_tipo = ler_enum(TipoAtivo, "\033[36mNovo Tipo:\033[0m")
                 gerenciador.inventario[info_id]["tipo"] = n_tipo
             case _:
