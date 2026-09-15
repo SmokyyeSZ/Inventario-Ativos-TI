@@ -1,0 +1,16 @@
+{
+    "1": {
+        "nome": "Servidor web",
+        "departamento": "RH",
+        "tipo": "SERVIDOR",
+        "severidade": "BAIXA",
+        "status": "ABERTO"
+    },
+    "2": {
+        "nome": "Notebook",
+        "departamento": "TI",
+        "tipo": "NOTEBOOK",
+        "severidade": "ALTA",
+        "status": "EM_TRATAMENTO"
+    }
+}
