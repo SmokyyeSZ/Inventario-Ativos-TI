@@ -4,6 +4,7 @@ from interface import (
     listar_ativos,
     atualizar_ativo,
     excluir_ativo,
+    gerenciar_vulnerabilidades, # <-- IMPORT NOVO
     ler_inteiro,
     limpar_tela,
     pausar
@@ -19,6 +20,7 @@ def menu_principal():
         print("3 - Listar Todos os Ativos")
         print("4 - Atualizar Ativo")
         print("5 - Excluir Ativo")
+        print("6 - Gerenciar Vulnerabilidades") # <-- OPÇÃO NOVA
         print("0 - Sair")
         print("---------------------------------------------")
         
@@ -40,6 +42,9 @@ def menu_principal():
                 pausar()
             case 5:
                 excluir_ativo()
+                pausar()
+            case 6:
+                gerenciar_vulnerabilidades() # <-- CHAMA A FUNÇÃO NOVA
                 pausar()
             case 0:
                 print("\n\033[32mEncerrando o sistema. Até logo!\033[0m")

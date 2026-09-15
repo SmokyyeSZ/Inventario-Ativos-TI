@@ -1,0 +1,54 @@
+# 💻 Sistema de Inventário de Ativos e Vulnerabilidades de TI
+
+Este projeto é uma aplicação em Python desenvolvida para simular, de forma simplificada, uma base de inventário de segurança utilizada por uma equipe de Computação ou Cibersegurança. Ele permite gerenciar recursos computacionais e acompanhar falhas de segurança.
+
+## 🚀 Funcionalidades (CRUD)
+
+O sistema é interativo e executado via terminal, contando com tratamento robusto de erros e dados vazios. Suas principais funções são:
+- **Cadastrar Ativos:** Inclusão de equipamentos/sistemas (ex: Servidores, Notebooks) com geração de ID.
+- **Consultar Ativos:** Busca otimizada de ativos por ID ou Nome/Hostname.
+- **Atualizar e Excluir:** Modificação de dados do ativo ou remoção completa da base.
+- **Gestão de Vulnerabilidades:** Cadastro e listagem de vulnerabilidades associadas a cada ativo (com descrição, severidade, categoria e status de tratamento).
+
+---
+
+## 🗺️ Índice / Arquitetura do Projeto
+
+O sistema foi desenvolvido utilizando o paradigma de Orientação a Objetos (POO) e estruturado no padrão MVC (Model-View-Controller). Abaixo está o mapa da nossa arquitetura:
+
+📁 Inventario-Ativos-TI/
+│
+├── 📄 main.py          # 🚪 Ponto de entrada: Executa o loop do Menu Principal.
+│
+├── 📄 interface.py     # 🖥️ View: Lida com todas as interações do usuário.
+│                       # Contém os inputs, prints, validações de texto e menus.
+│
+├── 📄 gerenciador.py   # ⚙️ Controller: Contém a classe InventarioManager.
+│                       # Faz a ponte entre a interface e o banco de dados.
+│
+├── 📄 modelos.py       # 🧱 Models: Guarda as definições de classes (Ativo e 
+│                       # Vulnerabilidade) e Enums de padronização.
+│
+└── 🗄️ inventario.json  # 💾 Banco de Dados: Arquivo autogerado onde os dados
+                        # são persistidos localmente.
+
+🛠️ Tecnologias Utilizadas
+Linguagem: Python 3.x
+
+Persistência de Dados: JSON (Manipulação de Dicionários / Hash Maps)[cite: 8]
+
+Controle de Versão: Git e GitHub (Trabalho com múltiplas branches e merges)[cite: 8]
+
+▶️ Como Executar
+Clone este repositório para a sua máquina:
+
+Bash
+git clone [https://github.com/SeuUsuario/Inventario-Ativos-TI.git](https://github.com/SeuUsuario/Inventario-Ativos-TI.git)
+Acesse a pasta do projeto:
+
+Bash
+cd Inventario-Ativos-TI
+Execute o arquivo principal:
+
+Bash
+python main.py

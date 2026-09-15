@@ -1,16 +1,54 @@
 {
     "1": {
-        "nome": "Servidor web",
-        "departamento": "RH",
+        "nome": "SRV-WEB-PROD",
+        "departamento": "Infraestrutura",
         "tipo": "SERVIDOR",
-        "severidade": "BAIXA",
-        "status": "ABERTO"
+        "vulnerabilidades": [
+            {
+                "descricao": "Porta RDP (3389) exposta para a internet",
+                "categoria": "Configuração Insegura",
+                "severidade": "CRITICA",
+                "status": "ABERTO"
+            }
+        ]
     },
     "2": {
-        "nome": "Notebook",
-        "departamento": "TI",
+        "nome": "DB-CLIENTES-SQL",
+        "departamento": "Operações",
+        "tipo": "BANCO_DE_DADOS",
+        "vulnerabilidades": [
+            {
+                "descricao": "Instancia rodando com usuário root",
+                "categoria": "Privilégio Excessivo",
+                "severidade": "ALTA",
+                "status": "ABERTO"
+            }
+        ]
+    },
+    "3": {
+        "nome": "NB-FINAN-045",
+        "departamento": "Financeiro",
         "tipo": "NOTEBOOK",
-        "severidade": "ALTA",
-        "status": "EM_TRATAMENTO"
+        "vulnerabilidades": [
+            {
+                "descricao": "Ausência de antivírus corporativo",
+                "categoria": "Endpoint Desprotegido",
+                "severidade": "ALTA",
+                "status": "EM_TRATAMENTO"
+            }
+        ]
+    },
+    "4": {
+        "nome": "RT-WIFI-RECEP",
+        "departamento": "Recepção",
+        "tipo": "ROTEADORES",
+        "vulnerabilidades": [
+            {
+                "descricao": "Senha padrão de fabrica (admin/admin)",
+                "categoria": "Credencial fraca",
+                "severidade": "CRITICA",
+                "status": "CORRIGIDA"
+            }
+        ]
     }
 }
