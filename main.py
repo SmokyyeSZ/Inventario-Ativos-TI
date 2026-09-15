@@ -57,33 +57,81 @@ class StatusTratamento(Enum):
     RISCO_ACEITO = 4
 
 #[------------------------ ------------------------]
-#|          BLOCO: Persistencia de dados           |
+#|               BLOCO: REFATORAMENTO              |
 #[------------------------ ------------------------]
 
-#[             SEÇÃO: Variaveis_dados              ]
+class Ativo:
+    """
+    Representa um ativo de TI e armazena suas propriedades.
+    """
+    def __init__(self, id_ativo, nome, departamento, tipo, severidade, status):
+        self.id_ativo = id_ativo
+        self.nome = nome
+        self.departamento = departamento
+        self.tipo = tipo
+        self.severidade = severidade
+        self.status = status
 
-ARQUIVO_DB = "inventario.json"
+    #Função pra voltar tudo ao formato de dicionário pro json conseguir entender
+    def to_dict(self):
+        return{
+            "nome": self.nome,
+            "departamento": self.departamento,
+            "tipo": self.tipo,
+            "severidade": self.severidade,
+            "status": self.status
+        }
 
-#[               SEÇÃO: Funções_dados              ]
+class InventarioManager:
+    """
+    Interage organiza e salva os dados
+    """
 
-def carregar_dados():
-    #Carrega o arquivo json e o salva em uma variavel pra podermos manipular os dados.
-    try:
-        with open(ARQUIVO_DB, 'r', encoding='utf-8') as arquivo:
-            dados = json.load(arquivo)
-            print("\033[32m[SUCESSO] Dados carregados com sucesso.\033[0m")
-            return dados
-    except FileNotFoundError:
-        print("\033[33m[AVISO] Nenhum arquivo de base encontrado. Iniciando inventário vazio.\033[0m")
-        return {}
+    def __init__(self):
+        self.arquivo_db = "inventario.json"
+        self.inventario = {}
 
-def salvar_dados(dados):
-    #Recebe um parametro e salva ele dentro do nosso "banco de dados" (json)
-    try:
-        with open(ARQUIVO_DB, 'w', encoding='utf-8') as arquivo:
-            json.dump(dados, arquivo, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"\033[31m[ERRO] Erro ao salvar os dados: {e}\033[0m")
+        self.inventario = self.carregar_dados()
+
+    def carregar_dados(self):
+        """
+        Carrega o arquivo json e o salva em uma variavel pra podermos manipular os dados.
+        """
+        try:
+            with open(self.arquivo_db, 'r', encoding='utf-8') as arquivo:
+                dados = json.load(arquivo)
+                print("\033[32m[SUCESSO] Dados carregados com sucesso.\033[0m")
+                return dados
+        except FileNotFoundError:
+            print("\033[33m[AVISO] Nenhum arquivo de base encontrado. Iniciando inventário vazio.\033[0m")
+            return {}
+
+    def salvar_dados(self):
+        """
+        Recebe o arquivo modificado e salva ele dentro do nosso "banco de dados" (json)
+        """
+        try:
+            with open(self.arquivo_db, 'w', encoding='utf-8') as arquivo:
+                json.dump(self.inventario, arquivo, indent=4, ensure_ascii=False)
+        except Exception as e:
+            print(f"\033[31m[ERRO] Erro ao salvar os dados: {e}\033[0m")
+
+    def adicionar_ativo(self, ativo):
+
+        if ativo.id_ativo in self.inventario:
+            return False
+        else:
+            self.inventario[ativo.id_ativo] = ativo.to_dict()
+
+        self.salvar_dados()
+        return True
+
+
+#-----------------------------------------------------------FIM DO BLOCO DE REFATORAMENTO--------------------------------------------------------
+
+#[------------------------ ------------------------]
+#|          BLOCO: Persistencia de dados           |
+#[------------------------ ------------------------]
 
 #[------------------------ ------------------------]
 #|       BLOCO: Crud, Validações e Interface       |
@@ -99,10 +147,6 @@ def cadastrar_ativos():
 
     id_ativo = str(ler_inteiro("\033[36mDigite o ID do ativo (número): \033[0m"))
 
-    if id_ativo in inventario:
-        print(f"\n\033[31m[ERRO] Já existe um ativo cadastrado com o ID {id_ativo}\033[0m")
-        return
-
     nome_ativo = input("\033[36mDigite o nome do ativo (ex: Servidor Web, Notebook Dell): \033[0m").strip()
     departamento = input("\033[36mDigite o departamento (ex: RH, TI, Financeiro): \033[0m").strip()
 
@@ -110,32 +154,29 @@ def cadastrar_ativos():
     severidade = ler_enum(SeveridadeVulnerabilidade, "\033[36mSelecione a severidade da vulnerabilidade:\033[0m")
     status = ler_enum(StatusTratamento, "\033[36mSelecione o Status do Tratamento:\033[0m")
 
-    inventario[id_ativo] = {
-        "nome": nome_ativo,
-        "departamento": departamento,
-        "tipo": tipo,
-        "severidade": severidade,
-        "status": status
-    }
+    novo_ativo = Ativo(id_ativo, nome_ativo, departamento, tipo, severidade, status)
 
-    salvar_dados(inventario)
-    print("\n\033[32m[SUCESSO] Ativo cadastrado com sucesso!\033[0m")
-        
+    sucesso = gerenciador.adicionar_ativo(novo_ativo)
+
+    if sucesso:
+        print("\n\033[32m[SUCESSO] Ativo cadastrado com sucesso!\033[0m")
+    else:
+        print(f"\n\033[31m[ERRO] Já existe um ativo cadastrado com o ID {id_ativo}\033[0m")
 
 def consultar_ativo():
     """
     Recebe um ID como parametro, busca e mostra o ativo ao qual o ID faz referencia
     """
-    if not inventario:
+    if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventario não existe ou não foi carregado corretamente.\033[0m")
         return
 
     print("\n--- [ Módulo de Consulta ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo (número): \033[0m"))
 
-    if info_id in inventario:
+    if info_id in gerenciador.inventario:
         print(f"\n\033[32m[ENCONTRADO] Informações do ID:\033[0m")
-        for chave, valor in inventario[info_id].items():
+        for chave, valor in gerenciador.inventario[info_id].items():
             print(f"{chave.capitalize()}: {valor}")
         print("")
     else:
@@ -147,13 +188,13 @@ def listar_ativos():
     """
     Devolve ao usuario a lista dos ativos cadastrados em um formato mais resumido pra evitar poluir a tela
     """
-    if not inventario:
+    if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventario não existe ou não foi carregado corretamente.\033[0m")
         return
 
     print("\n--- [ ATIVOS CADASTRADOS ] ---")
 
-    for chave, valor in inventario.items():
+    for chave, valor in gerenciador.inventario.items():
         print("~" * 60)
         print(f"ID: {chave} | Nome: {valor['nome']} | Departamento: {valor['departamento']} | Tipo: {valor['tipo']}\nSeveridade: {valor['severidade']} | Status: {valor['status']}")
     print("~" * 60)
@@ -162,16 +203,16 @@ def atualizar_ativo():
     """
     Acessa um ativo atravez do ID digitado pelo usuario e modifica os valores que o usuario quiser
     """
-    if not inventario:
+    if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventario não existe ou está vazio.\033[0m")
         return
         
     print("\n--- [ Módulo de Atualização ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo para atualizar (número): \033[0m"))
 
-    if info_id in inventario:
+    if info_id in gerenciador.inventario:
         print(f"\n\033[32m[ENCONTRADO] Informações atuais do ID:\033[0m")
-        for chave, valor in inventario[info_id].items():
+        for chave, valor in gerenciador.inventario[info_id].items():
             print(f"{chave}: {valor}")
 
         print("-" * 50)
@@ -186,27 +227,27 @@ def atualizar_ativo():
                 if not n_nome:
                     print("\033[33m[AVISO] Input vazio, operação cancelada.\033[0m")
                     return
-                inventario[info_id]["nome"] = n_nome
+                gerenciador.inventario[info_id]["nome"] = n_nome
             case 2:
                 n_departamento = input("\033[36mDigite o novo departamento: \033[0m").strip()
                 if not n_departamento:
                     print("\033[33m[AVISO] Input vazio, operação cancelada.\033[0m")
                     return
-                inventario[info_id]["departamento"] = n_departamento
+                gerenciador.inventario[info_id]["departamento"] = n_departamento
             case 3:
                 n_tipo = ler_enum(TipoAtivo, "\033[36mSelecione o novo Tipo de Ativo:\033[0m")
-                inventario[info_id]["tipo"] = n_tipo
+                gerenciador.inventario[info_id]["tipo"] = n_tipo
             case 4:
                 n_severidade = ler_enum(SeveridadeVulnerabilidade, "\033[36mSelecione a nova severidade:\033[0m")
-                inventario[info_id]["severidade"] = n_severidade
+                gerenciador.inventario[info_id]["severidade"] = n_severidade
             case 5:
                 n_status = ler_enum(StatusTratamento, "\033[36mSelecione o novo status:\033[0m")
-                inventario[info_id]["status"] = n_status
+                gerenciador.inventario[info_id]["status"] = n_status
             case _:
                 print("\033[31m[ERRO] Opção de modificação inválida.\033[0m")
                 return
 
-        salvar_dados(inventario)
+        gerenciador.salvar_dados()
         print("\n\033[32m[SUCESSO] Ativo atualizado com sucesso!\033[0m")
 
     else:
@@ -217,16 +258,16 @@ def excluir_ativo():
     """
     Busca um ativo especifico no inventario e exclui os dados dele
     """
-    if not inventario:
+    if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventario não existe ou está vazio.\033[0m")
         return
 
     print("\n--- [ Módulo de Exclusão ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo que deseja excluir: \033[0m"))
 
-    if info_id in inventario:
+    if info_id in gerenciador.inventario:
         print(f"\n\033[32m[ENCONTRADO] Informações atuais do ID:\033[0m")
-        for chave, valor in inventario[info_id].items():
+        for chave, valor in gerenciador.inventario[info_id].items():
             print(f"{chave}: {valor}")
 
         print("\nEscolha:\n 1 - Excluir ativo\n 2 - Voltar\n")
@@ -237,8 +278,8 @@ def excluir_ativo():
             case 1:
                 es = ler_inteiro("\033[33m[AVISO] O ativo será excluído para sempre. Escolha -> 1 - Confirmar Exclusão ou 2 - Cancelar: \033[0m")
                 if es == 1:
-                    del inventario[info_id]
-                    salvar_dados(inventario)
+                    del gerenciador.inventario[info_id]
+                    gerenciador.salvar_dados()
                     print("\n\033[32m[SUCESSO] Ativo excluído com sucesso.\033[0m")
                 else:
                     print("\n\033[36mOperação cancelada. Voltando ao menu...\033[0m")
@@ -339,7 +380,7 @@ def menu_principal():
 #|               BLOCO: Base de Dados              |
 #[------------------------ ------------------------]
 
-inventario = carregar_dados()
+gerenciador = InventarioManager()
 
 #[------------------------ ------------------------]
 #|             BLOCO: Iniciar Programa             |
