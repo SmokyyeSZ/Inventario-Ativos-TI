@@ -1,4 +1,24 @@
+"""
+========================= Índice =========================
+
+[BLOCO: Imports]
+
+[BLOCO: Enums]
+
+[BLOCO: Moldes POO]
+
+"""
+
+#[------------------------ ------------------------]
+#|                 BLOCO: Imports                  |
+#[------------------------ ------------------------]
+
+
 from enum import Enum
+
+#[------------------------ ------------------------]
+#|                  BLOCO: Enums                   |
+#[------------------------ ------------------------]
 
 class TipoAtivo(Enum):
     NOTEBOOK = 1
@@ -17,6 +37,10 @@ class StatusTratamento(Enum):
     EM_TRATAMENTO = 2
     CORRIGIDA = 3
     RISCO_ACEITO = 4
+
+#[------------------------ ------------------------]
+#|                 BLOCO: Moldes POO                  |
+#[------------------------ ------------------------]
 
 class Vulnerabilidade:
     """Representa uma vulnerabilidade associada a um ativo de TI."""
