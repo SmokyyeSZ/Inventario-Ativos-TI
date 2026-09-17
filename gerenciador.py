@@ -1,5 +1,22 @@
+"""
+========================= Índice =========================
+
+[BLOCO: Imports]
+
+[BLOCO: Banco de dados]
+
+"""
+
+#[------------------------ ------------------------]
+#|                 BLOCO: Imports                  |
+#[------------------------ ------------------------]
+
 import json
 from modelos import Ativo
+
+#[------------------------ ------------------------]
+#|               BLOCO: Banco de dados             |
+#[------------------------ ------------------------]
 
 class InventarioManager:
     """Interage, organiza e salva os dados no banco JSON."""

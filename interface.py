@@ -1,10 +1,38 @@
+"""
+========================= Índice =========================
+
+[BLOCO: Imports]
+
+[BLOCO: Inventario]
+
+[BLOCO: Utils/validações]
+
+[BLOCO: CRUD]
+    [SEÇÃO: Cadastro Ativos]
+    [SEÇÃO: Consultar Ativos]
+    [SEÇÃO: Listar Ativos]
+    [SEÇÃO: Atualizar Ativos]
+    [SEÇÃO: Excluir Ativos]
+
+"""
+
+#[------------------------ ------------------------]
+#|                 BLOCO: Imports                  |
+#[------------------------ ------------------------]
+
 import os
 from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Ativo, Vulnerabilidade
 from gerenciador import InventarioManager
 
+#[------------------------ ------------------------]
+#|               BLOCO: Inventario                 |
+#[------------------------ ------------------------]
+
 gerenciador = InventarioManager()
 
-# --- UTILS E VALIDAÇÕES ---
+#[------------------------ ------------------------]
+#|             BLOCO: Utils/Validações             |
+#[------------------------ ------------------------]
 
 def ler_inteiro(mensagem):
     while True:
@@ -38,7 +66,12 @@ def limpar_tela():
 def pausar():
     input("\n\033[36mPressione ENTER para continuar...\033[0m")
 
-# --- MÓDULOS CRUD DE ATIVOS ---
+#[------------------------ ------------------------]
+#|                   BLOCO: CRUD                   |
+#[------------------------ ------------------------]
+
+
+#[              SEÇÃO: Cadastro Ativos             ]
 
 def cadastrar_ativos():
     print("\n--- [ Módulo de Cadastro ] ---")
@@ -70,6 +103,8 @@ def cadastrar_ativos():
     gerenciador.adicionar_ativo(novo_ativo)
     print("\n\033[32m[SUCESSO] Ativo cadastrado com sucesso!\033[0m")
 
+#[              SEÇÃO: Consultar Ativos            ]
+
 def consultar_ativo():
     if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventário está vazio.\033[0m")
@@ -93,6 +128,8 @@ def consultar_ativo():
     if not encontrado:
         print(f"\n\033[33m[AVISO] Nenhum ativo encontrado com ID ou Nome '{termo}'.\033[0m")
 
+#[              SEÇÃO: Listar Ativos               ]
+
 def listar_ativos():
     if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventário está vazio.\033[0m")
@@ -103,6 +140,8 @@ def listar_ativos():
         print("~" * 60)
         print(f"ID: {chave} | Nome: {valor['nome']} | Tipo: {valor['tipo']} | Vulns: {len(valor['vulnerabilidades'])}")
     print("~" * 60)
+
+#[              SEÇÃO: Atualizar Ativos            ]
 
 def atualizar_ativo():
     if not gerenciador.inventario:
@@ -140,6 +179,8 @@ def atualizar_ativo():
     else:
         print(f"\n\033[33m[AVISO] ID {info_id} não existe.\033[0m")
 
+#[              SEÇÃO: Excluir Ativos              ]
+
 def excluir_ativo():
     if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventário está vazio.\033[0m")
@@ -158,7 +199,9 @@ def excluir_ativo():
     else:
         print(f"\n\033[33m[AVISO] ID {info_id} não existe.\033[0m")
 
-# --- MÓDULOS DE VULNERABILIDADES ---
+#[------------------------ ------------------------]
+#|             BLOCO: Vulnerabilidad               |
+#[------------------------ ------------------------]
 
 def gerenciar_vulnerabilidades():
     if not gerenciador.inventario:
