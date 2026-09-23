@@ -153,7 +153,7 @@ def atualizar_ativo():
 
     if info_id in gerenciador.inventario:
         print("-" * 50)
-        print("Escolha o que deseja modificar:\n 1 - Nome\n 2 - Responsável\n 3 - Departamento\n 4 - Tipo")
+        print("Escolha o que deseja modificar:\n 1 - Nome\n 2 - Responsável\n 3 - Departamento\n 4 - Tipo\n 5 - Voltar")
         print("-" * 50)
         escolha = ler_inteiro("\033[36mDigite a opção: \033[0m")
 
@@ -170,6 +170,9 @@ def atualizar_ativo():
             case 4: # (O antigo case 3 virou 4)
                 n_tipo = ler_enum(TipoAtivo, "\033[36mNovo Tipo:\033[0m")
                 gerenciador.inventario[info_id]["tipo"] = n_tipo
+            case 5:
+                print("Voltando ao menu inicial...")
+                return
             case _:
                 print("\033[31m[ERRO] Opção inválida.\033[0m")
                 return
@@ -220,27 +223,60 @@ def gerenciar_vulnerabilidades():
     print(f"\nAtivo Selecionado: {ativo['nome']}")
     print("1 - Cadastrar nova vulnerabilidade")
     print("2 - Visualizar vulnerabilidades")
+    print("3 - Excluir vulnerabilidade")
+    print("4 - Voltar ao Menu inicial")
     opcao = ler_inteiro("\033[36mEscolha a opção: \033[0m")
 
-    if opcao == 1:
-        desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
-        cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
-        sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
-        stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
-        
-        nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
-        ativo["vulnerabilidades"].append(nova_vuln)
-        gerenciador.salvar_dados()
-        print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+    match opcao:
+        case 1:
+            desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
+            cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
+            sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
+            stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
 
-    elif opcao == 2:
-        if not ativo["vulnerabilidades"]:
-            print("\n\033[32mO ativo está sem vulnerabilidades registradas.\033[0m")
-        else:
-            print(f"\n--- Vulnerabilidades de {ativo['nome']} ---")
-            for i, vuln in enumerate(ativo["vulnerabilidades"], 1):
-                print(f"[{i}] Descrição: {vuln['descricao']} | Categoria: {vuln['categoria']}")
-                print(f"    Severidade: {vuln['severidade']} | Status: {vuln['status']}")
-                print("-" * 40)
-    else:
-        print("\033[31m[ERRO] Opção inválida.\033[0m")
+            nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
+            ativo["vulnerabilidades"].append(nova_vuln)
+            gerenciador.salvar_dados()
+            print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+
+        case 2:
+            if not ativo["vulnerabilidades"]:
+                print("\n\033[33m[AVISO] O ativo está sem vulnerabilidades registradas.\033[0m")
+            else:
+                print(f"\n--- Vulnerabilidades de {ativo['nome']} ---")
+                for i, vuln in enumerate(ativo["vulnerabilidades"], 1):
+                    print(f"[{i}] Descrição: {vuln['descricao']} | Categoria: {vuln['categoria']}")
+                    print(f"    Severidade: {vuln['severidade']} | Status: {vuln['status']}")
+                    print("-" * 40)
+
+        case 3:
+            if not ativo["vulnerabilidades"]:
+                print("\n\033[33m[AVISO] O ativo está sem vulnerabilidades registradas.\033[0m")
+            else:
+                print(f"\n--- Vulnerabilidades de {ativo['nome']} ---")
+                for i, vuln in enumerate(ativo["vulnerabilidades"], 1):
+                    print(f"[{i}] Descrição: {vuln['descricao']} | Categoria: {vuln['categoria']}")
+                    print(f"    Severidade: {vuln['severidade']} | Status: {vuln['status']}")
+                    print("-" * 40)
+
+                while True:
+                    escolha = ler_inteiro("Informe o numero da vulnerabilidade que deseja excluir ou 0 caso queira sair: ")
+
+                    if 1 <= escolha <= len(ativo["vulnerabilidades"]):
+                        ativo["vulnerabilidades"].pop(escolha -1)
+                        print("\n\033[32m[SUCESSO] Vulnerabilidade excluida com sucesso!\033[0m")
+                        gerenciador.salvar_dados()
+                        break
+
+                    elif escolha == 0:
+                        print("Voltando ao menu...")
+                        break
+
+                    else:
+                        print("\033[31m[ERRO] Valor invalido!\033[0m")
+
+        case 4:
+            print("Voltando ao Menu inicial...")
+            return
+        case _:
+            print("\033[31m[ERRO] Opção inválida.\033[0m")
