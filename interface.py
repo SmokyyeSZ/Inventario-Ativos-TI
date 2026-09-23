@@ -223,7 +223,8 @@ def gerenciar_vulnerabilidades():
     print(f"\nAtivo Selecionado: {ativo['nome']}")
     print("1 - Cadastrar nova vulnerabilidade")
     print("2 - Visualizar vulnerabilidades")
-    print("3 - Voltar ao Menu inicial")
+    print("3 - Excluir vulnerabilidade")
+    print("4 - Voltar ao Menu inicial")
     opcao = ler_inteiro("\033[36mEscolha a opção: \033[0m")
 
     match opcao:
@@ -237,16 +238,44 @@ def gerenciar_vulnerabilidades():
             ativo["vulnerabilidades"].append(nova_vuln)
             gerenciador.salvar_dados()
             print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+
         case 2:
             if not ativo["vulnerabilidades"]:
-                print("\n\033[32mO ativo está sem vulnerabilidades registradas.\033[0m")
+                print("\n\033[33m[AVISO] O ativo está sem vulnerabilidades registradas.\033[0m")
             else:
                 print(f"\n--- Vulnerabilidades de {ativo['nome']} ---")
                 for i, vuln in enumerate(ativo["vulnerabilidades"], 1):
                     print(f"[{i}] Descrição: {vuln['descricao']} | Categoria: {vuln['categoria']}")
                     print(f"    Severidade: {vuln['severidade']} | Status: {vuln['status']}")
                     print("-" * 40)
+
         case 3:
+            if not ativo["vulnerabilidades"]:
+                print("\n\033[33m[AVISO] O ativo está sem vulnerabilidades registradas.\033[0m")
+            else:
+                print(f"\n--- Vulnerabilidades de {ativo['nome']} ---")
+                for i, vuln in enumerate(ativo["vulnerabilidades"], 1):
+                    print(f"[{i}] Descrição: {vuln['descricao']} | Categoria: {vuln['categoria']}")
+                    print(f"    Severidade: {vuln['severidade']} | Status: {vuln['status']}")
+                    print("-" * 40)
+
+                while True:
+                    escolha = ler_inteiro("Informe o numero da vulnerabilidade que deseja excluir ou 0 caso queira sair: ")
+
+                    if 1 <= escolha <= len(ativo["vulnerabilidades"]):
+                        ativo["vulnerabilidades"].pop(escolha -1)
+                        print("\n\033[32m[SUCESSO] Vulnerabilidade excluida com sucesso!\033[0m")
+                        gerenciador.salvar_dados()
+                        break
+
+                    elif escolha == 0:
+                        print("Voltando ao menu...")
+                        break
+
+                    else:
+                        print("\033[31m[ERRO] Valor invalido!\033[0m")
+
+        case 4:
             print("Voltando ao Menu inicial...")
             return
         case _:
