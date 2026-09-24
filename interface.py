@@ -21,8 +21,10 @@
 #[------------------------ ------------------------]
 
 import os
+from cve_service import validar_formato_cve, ver_CVE
 from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Ativo, Vulnerabilidade
 from gerenciador import InventarioManager
+import re
 
 #[------------------------ ------------------------]
 #|               BLOCO: Inventario                 |
@@ -229,15 +231,37 @@ def gerenciar_vulnerabilidades():
 
     match opcao:
         case 1:
-            desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
-            cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
-            sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
-            stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
+            dados_api = ver_CVE()
+            if dados_api:
+                desc = dados_api["vulnerabilities"][0]["cve"]["descriptions"][0]["value"]
+                cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
+                sev_api = dados_api["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseSeverity"]
+                stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
+                match sev_api:
+                    case "LOW":
+                        sev = SeveridadeVulnerabilidade.BAIXA.name
+                    case "MEDIUM":
+                        sev = SeveridadeVulnerabilidade.MEDIA.name
+                    case "HIGH":
+                        sev = SeveridadeVulnerabilidade.ALTA.name
+                    case "CRITICAL":
+                        sev = SeveridadeVulnerabilidade.CRITICA.name
 
-            nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
-            ativo["vulnerabilidades"].append(nova_vuln)
-            gerenciador.salvar_dados()
-            print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+                nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
+                ativo["vulnerabilidades"].append(nova_vuln)
+                gerenciador.salvar_dados()
+                print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+
+            else:
+                desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
+                cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
+                sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
+                stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
+
+                nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
+                ativo["vulnerabilidades"].append(nova_vuln)
+                gerenciador.salvar_dados()
+                print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
 
         case 2:
             if not ativo["vulnerabilidades"]:
@@ -245,8 +269,8 @@ def gerenciar_vulnerabilidades():
             else:
                 print(f"\n--- Vulnerabilidades de {ativo['nome']} ---")
                 for i, vuln in enumerate(ativo["vulnerabilidades"], 1):
-                    print(f"[{i}] Descrição: {vuln['descricao']} | Categoria: {vuln['categoria']}")
-                    print(f"    Severidade: {vuln['severidade']} | Status: {vuln['status']}")
+                    print(f"[{i}] Descrição: {vuln['descricao']}\n\nCategoria: {vuln['categoria']}")
+                    print(f"Severidade: {vuln['severidade']}\nStatus: {vuln['status']}")
                     print("-" * 40)
 
         case 3:
