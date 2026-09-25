@@ -22,7 +22,7 @@
 
 import os
 from cve_service import validar_formato_cve, ver_CVE
-from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Ativo, Vulnerabilidade
+from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Ativo, Vulnerabilidade 
 from gerenciador import InventarioManager
 import re
 
@@ -95,14 +95,10 @@ def cadastrar_ativos():
     op = ler_inteiro("\033[36mEscolha: \033[0m")
     
     if op == 1:
-        desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
-        cat = ler_texto("\033[36mCategoria (ex: Software desatualizado, Senha fraca): \033[0m")
-        sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
-        stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
-        vuln = Vulnerabilidade(desc, cat, sev, stat)
+        vuln = criar_vuln_para_ativo()
         novo_ativo.adicionar_vulnerabilidade(vuln)
-
     gerenciador.adicionar_ativo(novo_ativo)
+    gerenciador.salvar_dados()
     print("\n\033[32m[SUCESSO] Ativo cadastrado com sucesso!\033[0m")
 
 #[              SEÇÃO: Consultar Ativos            ]
@@ -231,38 +227,9 @@ def gerenciar_vulnerabilidades():
 
     match opcao:
         case 1:
-            dados_api = ver_CVE()
-            if dados_api:
-                desc = dados_api["vulnerabilities"][0]["cve"]["descriptions"][0]["value"]
-                cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
-                sev_api = dados_api["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseSeverity"]
-                stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
-                match sev_api:
-                    case "LOW":
-                        sev = SeveridadeVulnerabilidade.BAIXA.name
-                    case "MEDIUM":
-                        sev = SeveridadeVulnerabilidade.MEDIA.name
-                    case "HIGH":
-                        sev = SeveridadeVulnerabilidade.ALTA.name
-                    case "CRITICAL":
-                        sev = SeveridadeVulnerabilidade.CRITICA.name
-
-                nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
-                ativo["vulnerabilidades"].append(nova_vuln)
-                gerenciador.salvar_dados()
-                print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
-
-            else:
-                desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
-                cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
-                sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
-                stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
-
-                nova_vuln = Vulnerabilidade(desc, cat, sev, stat).to_dict()
-                ativo["vulnerabilidades"].append(nova_vuln)
-                gerenciador.salvar_dados()
-                print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
-
+            vuln = criar_vuln_para_ativo()
+            ativo["vulnerabilidades"].append(vuln.to_dict())
+            gerenciador.salvar_dados()
         case 2:
             if not ativo["vulnerabilidades"]:
                 print("\n\033[33m[AVISO] O ativo está sem vulnerabilidades registradas.\033[0m")
@@ -302,5 +269,43 @@ def gerenciar_vulnerabilidades():
         case 4:
             print("Voltando ao Menu inicial...")
             return
-        case _:
+        case _: 
             print("\033[31m[ERRO] Opção inválida.\033[0m")
+
+def criar_vuln_para_ativo():
+        dados_api = ver_CVE()
+        if dados_api:
+            desc = dados_api["vulnerabilities"][0]["cve"]["descriptions"][0]["value"]
+            cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
+            try:
+                sev_api = dados_api["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseSeverity"]
+            except (KeyError, IndexError):
+                sev_api = "DESCONHECIDO"
+            stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
+            match sev_api:
+                case "LOW":
+                    sev = SeveridadeVulnerabilidade.BAIXA.name
+                case "MEDIUM":
+                    sev = SeveridadeVulnerabilidade.MEDIA.name
+                case "HIGH":
+                    sev = SeveridadeVulnerabilidade.ALTA.name
+                case "CRITICAL":
+                    sev = SeveridadeVulnerabilidade.CRITICA.name
+                case _:
+                    print("\n\033[33m[AVISO] Não foi possível localizar a severidade da vulnerabilidade. Por favor, informe manualmente:\033[0m")
+                    sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
+
+            nova_vuln = Vulnerabilidade(desc, cat, sev, stat)
+            print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+            return nova_vuln
+
+        else:
+            desc = ler_texto("\033[36mDescrição da vulnerabilidade: \033[0m")
+            cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
+            sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
+            stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
+
+            nova_vuln = Vulnerabilidade(desc, cat, sev, stat)
+            print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
+            return nova_vuln
+
