@@ -45,7 +45,7 @@ O sistema foi desenvolvido utilizando o paradigma de Orientação a Objetos (POO
 
 1. Clone este repositório para a sua máquina:
 ```bash
-git clone [https://github.com/SeuUsuario/Inventario-Ativos-TI.git](https://github.com/SeuUsuario/Inventario-Ativos-TI.git)
+git clone https://github.com/SeuUsuario/Inventario-Ativos-TI.git
 
 Acesse a pasta do projeto:
 cd Inventario-Ativos-TI
