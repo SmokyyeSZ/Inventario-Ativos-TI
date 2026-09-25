@@ -1,59 +1,43 @@
 {
     "1": {
-        "nome": "SRV-WEB-PROD",
-        "departamento": "Infraestrutura",
+        "nome": "SRV-WEB-01",
+        "responsavel": "TI",
+        "departamento": "TI",
         "tipo": "SERVIDOR",
         "vulnerabilidades": [
             {
-                "descricao": "Porta RDP (3389) exposta para a internet",
-                "categoria": "Configuração Insegura",
+                "descricao": "Apache Log4j2 2.0-beta9 through 2.15.0 (excluding security releases 2.12.2, 2.12.3, and 2.3.1) JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default. From version 2.16.0 (along with 2.12.2, 2.12.3, and 2.3.1), this functionality has been completely removed. Note that this vulnerability is specific to log4j-core and does not affect log4net, log4cxx, or other Apache Logging Services projects.",
+                "categoria": "injeção de codigo",
                 "severidade": "CRITICA",
-                "status": "ABERTO"
-            },
-            {
-                "descricao": "The Custom Field Template plugin for WordPress is vulnerable to generic SQL Injection via the 'post_ID' parameter in all versions up to, and including, 2.7.8 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with contributor-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. The capability check via current_user_can('edit_post', $id) is bypassable because WordPress internally casts $id to an integer for the permission evaluation while the full unsanitized string is preserved and passed to the SQL sink, and a valid nonce — which is also required — can be legitimately obtained by any Contributor-level user from the post edit screen.",
-                "categoria": "falha de configuração",
-                "severidade": "MEDIA",
-                "status": "EM_TRATAMENTO"
-            }
-        ]
-    },
-    "2": {
-        "nome": "DB-CLIENTES-SQL",
-        "departamento": "Operações",
-        "tipo": "BANCO_DE_DADOS",
-        "vulnerabilidades": [
-            {
-                "descricao": "Instancia rodando com usuário root",
-                "categoria": "Privilégio Excessivo",
-                "severidade": "ALTA",
                 "status": "ABERTO"
             }
         ]
     },
     "3": {
-        "nome": "NB-FINAN-045",
-        "departamento": "Financeiro",
+        "nome": "NB-DIRETORIA",
+        "responsavel": "Ana costa",
+        "departamento": "Diretoria",
         "tipo": "NOTEBOOK",
         "vulnerabilidades": [
             {
-                "descricao": "Ausência de antivírus corporativo",
-                "categoria": "Endpoint Desprotegido",
-                "severidade": "ALTA",
-                "status": "EM_TRATAMENTO"
+                "descricao": "sistema operativo desatualizado",
+                "categoria": "falta de patch",
+                "severidade": "MEDIA",
+                "status": "RISCO_ACEITO"
             }
         ]
     },
-    "4": {
-        "nome": "RT-WIFI-RECEP",
-        "departamento": "Recepção",
-        "tipo": "ROTEADORES",
+    "2": {
+        "nome": "DB-CLIENTES-01",
+        "responsavel": "Maria Santos",
+        "departamento": "Operações",
+        "tipo": "BANCO_DE_DADOS",
         "vulnerabilidades": [
             {
-                "descricao": "Senha padrão de fabrica (admin/admin)",
-                "categoria": "Credencial fraca",
+                "descricao": "Integer underflow in the unlzw function in unlzw.c in gzip before 1.4 on 64-bit platforms, as used in ncompress and probably others, allows remote attackers to cause a denial of service (application crash) or possibly execute arbitrary code via a crafted archive that uses LZW compression, leading to an array index error.",
+                "categoria": "Fuga de informações",
                 "severidade": "CRITICA",
-                "status": "CORRIGIDA"
+                "status": "RISCO_ACEITO"
             }
         ]
     }
