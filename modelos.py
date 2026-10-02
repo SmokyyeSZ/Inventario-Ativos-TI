@@ -27,6 +27,7 @@ class TipoAtivo(Enum):
     BANCO_DE_DADOS = 4
 
 class SeveridadeVulnerabilidade(Enum):
+    NENHUMA = 0
     BAIXA = 1
     MEDIA = 2
     ALTA = 3
@@ -44,21 +45,35 @@ class StatusTratamento(Enum):
 
 class Vulnerabilidade:
     """Representa uma vulnerabilidade associada a um ativo de TI."""
-    def __init__(self, descricao, categoria, severidade, status):
+    def __init__(self, descricao, categoria, severidade, status, score):
         self.descricao = descricao
         self.categoria = categoria
         self.severidade = severidade
         self.status = status
+        self.score = score
+        
 
     def to_dict(self):
         return {
             "descricao": self.descricao,
             "categoria": self.categoria,
             "severidade": self.severidade,
-            "status": self.status
+            "status": self.status,
+            "score": self.score
         }
-
-class Ativo:
+    def definir_severidade(self, score):
+        if score == 0:
+            return SeveridadeVulnerabilidade.NENHUMA.name
+        elif score <= 3.9:
+            return SeveridadeVulnerabilidade.BAIXA.name
+        elif score <= 6.9:
+            return SeveridadeVulnerabilidade.MEDIA.name
+        elif score <= 8.9:
+            return SeveridadeVulnerabilidade.ALTA.name
+        elif score <= 10:
+            return SeveridadeVulnerabilidade.CRITICA.name
+        
+class Equipamentos:
     """Representa um ativo de TI e armazena suas propriedades e vulnerabilidades."""
     def __init__(self, id_ativo, nome,responsavel, departamento, tipo):
         self.id_ativo = id_ativo
@@ -66,16 +81,44 @@ class Ativo:
         self.responsavel = responsavel
         self.departamento = departamento
         self.tipo = tipo
-        self.vulnerabilidades = [] # Lista inicial vazia de vulnerabilidades
+        self.vulnerabilidades = []
+        self.dependencias = []
 
     def adicionar_vulnerabilidade(self, vulnerabilidade: Vulnerabilidade):
         self.vulnerabilidades.append(vulnerabilidade)
 
     def to_dict(self):
         return {
+            "id_ativo": self.id_ativo,
             "nome": self.nome,
             "responsavel": self.responsavel,
             "departamento": self.departamento,
             "tipo": self.tipo,
-            "vulnerabilidades": [vuln.to_dict() for vuln in self.vulnerabilidades]
+            "vulnerabilidades": [vuln.to_dict() for vuln in self.vulnerabilidades],
+            "dependencias": self.dependencias
         }
+
+class Servidor(Equipamentos):
+    def __init__(self, id_ativo, nome, responsavel, departamento):
+        super().__init__(id_ativo, nome, responsavel, departamento, TipoAtivo.SERVIDOR)
+
+    def obter_fator_exposicao(self):
+        return 1.5
+
+class Notebook(Equipamentos):
+    def __init__(self, id_ativo, nome, responsavel, departamento):
+        super().__init__(id_ativo, nome, responsavel, departamento, TipoAtivo.NOTEBOOK)
+    def obter_fator_exposicao(self):
+        return 1.0
+
+class BancoDeDados(Equipamentos):
+    def __init__(self, id_ativo, nome, responsavel, departamento):
+        super().__init__(id_ativo, nome, responsavel, departamento, TipoAtivo.BANCO_DE_DADOS)
+    def obter_fator_exposicao(self):
+        return 1.5
+
+class Roteadores(Equipamentos):
+    def __init__(self, id_ativo, nome, responsavel, departamento):
+        super().__init__(id_ativo, nome, responsavel, departamento, TipoAtivo.ROTEADORES)
+    def obter_fator_exposicao(self):
+        return 1.0

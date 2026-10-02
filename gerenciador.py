@@ -12,7 +12,7 @@
 #[------------------------ ------------------------]
 
 import json
-from modelos import Ativo
+from modelos import Equipamentos
 
 #[------------------------ ------------------------]
 #|               BLOCO: Banco de dados             |
@@ -32,7 +32,7 @@ class InventarioManager:
                 return dados
         except FileNotFoundError:
             print("\033[33m[AVISO] Nenhum arquivo de base encontrado. Iniciando inventário vazio.\033[0m")
-            return {}
+            return []
 
     def salvar_dados(self):
         try:
@@ -41,11 +41,12 @@ class InventarioManager:
         except Exception as e:
             print(f"\033[31m[ERRO] Erro ao salvar os dados: {e}\033[0m")
 
-    def adicionar_ativo(self, ativo: Ativo):
-        if ativo.id_ativo in self.inventario:
+    def adicionar_ativo(self, ativo: Equipamentos):
+        val_id = next((eq for eq in self.inventario if eq.get('id_ativo') == ativo.id_ativo), None)
+        if val_id:
             return False
         else:
-            self.inventario[ativo.id_ativo] = ativo.to_dict()
+            self.inventario.append(ativo.to_dict())
 
         self.salvar_dados()
         return True
