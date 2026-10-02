@@ -22,7 +22,7 @@
 
 import os
 from cve_service import validar_formato_cve, ver_CVE
-from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Ativo, Vulnerabilidade 
+from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Equipamentos, Vulnerabilidade, Notebook, BancoDeDados, Roteadores, Servidor 
 from gerenciador import InventarioManager
 import re
 
@@ -36,6 +36,19 @@ gerenciador = InventarioManager()
 #|             BLOCO: Utils/Validações             |
 #[------------------------ ------------------------]
 
+def validar_id(id_procurado):
+    val_id = next((eq for eq in gerenciador.inventario if eq.get('id_ativo') == id_procurado), None)
+    if val_id:
+        return True
+    else:
+        return False
+
+def buscar_ativo_por_id(id_procurado):
+    ativo = next((eq for eq in gerenciador.inventario if eq.get('id_ativo') == id_procurado), None)
+    if ativo:
+        return ativo
+    else:
+        print(f"O id {id_procurado} não existe em nosso banco de dados.")
 def ler_inteiro(mensagem):
     while True:
         try:
@@ -79,7 +92,7 @@ def cadastrar_ativos():
     print("\n--- [ Módulo de Cadastro ] ---")
     id_ativo = str(ler_inteiro("\033[36mDigite o ID do ativo (número): \033[0m"))
     
-    if id_ativo in gerenciador.inventario:
+    if validar_id(id_ativo):
         print(f"\n\033[31m[ERRO] Já existe um ativo cadastrado com o ID {id_ativo}\033[0m")
         return
 
@@ -88,7 +101,15 @@ def cadastrar_ativos():
     departamento = ler_texto("\033[36mDigite o departamento/setor: \033[0m")
     tipo = ler_enum(TipoAtivo, "\033[36mSelecione o Tipo de Ativo:\033[0m")
 
-    novo_ativo = Ativo(id_ativo, nome_ativo,responsavel, departamento, tipo)
+    match tipo:
+        case "NOTEBOOK":
+            novo_ativo = Notebook(id_ativo, nome_ativo, responsavel, departamento)
+        case "SERVIDOR":
+            novo_ativo = Servidor(id_ativo, nome_ativo, responsavel, departamento)
+        case "BANCO_DE_DADOS":
+            novo_ativo = BancoDeDados(id_ativo, nome_ativo, responsavel, departamento)
+        case "ROTEADORES":
+            novo_ativo = Roteadores(id_ativo, nome_ativo, responsavel, departamento)
     
     print("\nDeseja registrar uma vulnerabilidade inicial para este ativo?")
     print("1 - Sim\n2 - Não")
@@ -112,14 +133,14 @@ def consultar_ativo():
     termo = ler_texto("\033[36mDigite o ID ou Nome/Hostname do ativo: \033[0m").lower()
 
     encontrado = False
-    for chave, valor in gerenciador.inventario.items():
-        if chave == termo or valor["nome"].lower() == termo:
-            print(f"\n\033[32m[ENCONTRADO] ID: {chave}\033[0m")
-            print(f"Nome: {valor['nome']}")
-            print(f"Responsável: {valor.get('responsavel', 'Não informado')}")
-            print(f"Departamento: {valor['departamento']}")
-            print(f"Tipo: {valor['tipo']}")
-            print(f"Total de Vulnerabilidades: {len(valor['vulnerabilidades'])}")
+    for ativo_dict in gerenciador.inventario:
+        if ativo_dict['id_ativo'] == termo or ativo_dict['nome'].lower() == termo:
+            print(f"\n\033[32m[ENCONTRADO] ID: {ativo_dict['id_ativo']}\033[0m")
+            print(f"Nome: {ativo_dict['nome']}")
+            print(f"Responsável: {ativo_dict.get('responsavel', 'Não informado')}")
+            print(f"Departamento: {ativo_dict['departamento']}")
+            print(f"Tipo: {ativo_dict['tipo']}")
+            print(f"Total de Vulnerabilidades: {len(ativo_dict['vulnerabilidades'])}")
             encontrado = True
             break
             
@@ -134,9 +155,9 @@ def listar_ativos():
         return
 
     print("\n--- [ ATIVOS CADASTRADOS ] ---")
-    for chave, valor in gerenciador.inventario.items():
+    for ativo_dict in gerenciador.inventario:
         print("~" * 60)
-        print(f"ID: {chave} | Nome: {valor['nome']} | Tipo: {valor['tipo']} | Vulns: {len(valor['vulnerabilidades'])}")
+        print(f"id_ativo: {ativo_dict['id_ativo']:<5} | Nome: {ativo_dict['nome']:<15} | Tipo: {ativo_dict['tipo']:<15} | Vulns: {len(ativo_dict['vulnerabilidades']):<5}")
     print("~" * 60)
 
 #[              SEÇÃO: Atualizar Ativos            ]
@@ -148,8 +169,8 @@ def atualizar_ativo():
         
     print("\n--- [ Módulo de Atualização ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo para atualizar: \033[0m"))
-
-    if info_id in gerenciador.inventario:
+    ativo = buscar_ativo_por_id(info_id)
+    if ativo:
         print("-" * 50)
         print("Escolha o que deseja modificar:\n 1 - Nome\n 2 - Responsável\n 3 - Departamento\n 4 - Tipo\n 5 - Voltar")
         print("-" * 50)
@@ -158,16 +179,16 @@ def atualizar_ativo():
         match escolha:
             case 1:
                 n_nome = input("\033[36mNovo nome (ou aperte ENTER para cancelar): \033[0m").strip()
-                if n_nome: gerenciador.inventario[info_id]["nome"] = n_nome
+                if n_nome: ativo['nome'] = n_nome
             case 2: # <-- BLOCO NOVO
                 n_resp = input("\033[36mNovo responsável (ou aperte ENTER para cancelar): \033[0m").strip()
-                if n_resp: gerenciador.inventario[info_id]["responsavel"] = n_resp
+                if n_resp: ativo["responsavel"] = n_resp
             case 3: # (O antigo case 2 virou 3)
                 n_dep = input("\033[36mNovo departamento (ou aperte ENTER para cancelar): \033[0m").strip()
-                if n_dep: gerenciador.inventario[info_id]["departamento"] = n_dep
+                if n_dep: ativo["departamento"] = n_dep
             case 4: # (O antigo case 3 virou 4)
                 n_tipo = ler_enum(TipoAtivo, "\033[36mNovo Tipo:\033[0m")
-                gerenciador.inventario[info_id]["tipo"] = n_tipo
+                ativo["tipo"] = n_tipo
             case 5:
                 print("Voltando ao menu inicial...")
                 return
@@ -188,11 +209,11 @@ def excluir_ativo():
         return
 
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo que deseja excluir: \033[0m"))
-
-    if info_id in gerenciador.inventario:
+    ativo = buscar_ativo_por_id(info_id)
+    if ativo:
         es = ler_inteiro("\033[33m[AVISO] O ativo e suas vulnerabilidades serão excluídos. 1 - Confirmar ou 2 - Cancelar: \033[0m")
         if es == 1:
-            del gerenciador.inventario[info_id]
+            gerenciador.inventario[info_id].remove(ativo)
             gerenciador.salvar_dados()
             print("\n\033[32m[SUCESSO] Ativo excluído com sucesso.\033[0m")
         else:
@@ -211,12 +232,10 @@ def gerenciar_vulnerabilidades():
 
     print("\n--- [ Gestão de Vulnerabilidades ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo para gerenciar vulnerabilidades: \033[0m"))
-
-    if info_id not in gerenciador.inventario:
+    ativo = buscar_ativo_por_id(info_id)
+    if not ativo:
         print(f"\n\033[33m[AVISO] ID {info_id} não existe.\033[0m")
         return
-    
-    ativo = gerenciador.inventario[info_id]
     
     print(f"\nAtivo Selecionado: {ativo['nome']}")
     print("1 - Cadastrar nova vulnerabilidade")
@@ -279,8 +298,10 @@ def criar_vuln_para_ativo():
             cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
             try:
                 sev_api = dados_api["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseSeverity"]
+                score_api = dados_api["vulnerabilities"][0]["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseScore"]
             except (KeyError, IndexError):
                 sev_api = "DESCONHECIDO"
+                score_api = 0.0
             stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
             match sev_api:
                 case "LOW":
@@ -295,7 +316,7 @@ def criar_vuln_para_ativo():
                     print("\n\033[33m[AVISO] Não foi possível localizar a severidade da vulnerabilidade. Por favor, informe manualmente:\033[0m")
                     sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
 
-            nova_vuln = Vulnerabilidade(desc, cat, sev, stat)
+            nova_vuln = Vulnerabilidade(desc, cat, sev, stat, score_api)
             print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
             return nova_vuln
 
@@ -304,8 +325,9 @@ def criar_vuln_para_ativo():
             cat = ler_texto("\033[36mCategoria (ex: Falha de Configuração): \033[0m")
             sev = ler_enum(SeveridadeVulnerabilidade, "\033[36mSeveridade:\033[0m")
             stat = ler_enum(StatusTratamento, "\033[36mStatus de Tratamento:\033[0m")
+            score_api = 0.0
 
-            nova_vuln = Vulnerabilidade(desc, cat, sev, stat)
+            nova_vuln = Vulnerabilidade(desc, cat, sev, stat, score_api)
             print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
             return nova_vuln
 
