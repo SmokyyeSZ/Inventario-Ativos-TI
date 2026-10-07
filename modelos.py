@@ -82,7 +82,7 @@ class Equipamentos:
         self.departamento = departamento
         self.tipo = tipo
         self.vulnerabilidades = []
-        self.dependencias = []
+        self.conexoes = []
 
     def adicionar_vulnerabilidade(self, vulnerabilidade: Vulnerabilidade):
         self.vulnerabilidades.append(vulnerabilidade)
@@ -93,9 +93,9 @@ class Equipamentos:
             "nome": self.nome,
             "responsavel": self.responsavel,
             "departamento": self.departamento,
-            "tipo": self.tipo,
+            "tipo": self.tipo.name,
             "vulnerabilidades": [vuln.to_dict() for vuln in self.vulnerabilidades],
-            "dependencias": self.dependencias
+            "conexoes": self.conexoes
         }
 
 class Servidor(Equipamentos):

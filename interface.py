@@ -21,6 +21,7 @@
 #[------------------------ ------------------------]
 
 import os
+from motor_matematico import fabrica_de_ativos
 from cve_service import validar_formato_cve, ver_CVE
 from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Equipamentos, Vulnerabilidade, Notebook, BancoDeDados, Roteadores, Servidor 
 from gerenciador import InventarioManager
@@ -43,12 +44,6 @@ def validar_id(id_procurado):
     else:
         return False
 
-def buscar_ativo_por_id(id_procurado):
-    ativo = next((eq for eq in gerenciador.inventario if eq.get('id_ativo') == id_procurado), None)
-    if ativo:
-        return ativo
-    else:
-        print(f"O id {id_procurado} não existe em nosso banco de dados.")
 def ler_inteiro(mensagem):
     while True:
         try:
@@ -101,15 +96,7 @@ def cadastrar_ativos():
     departamento = ler_texto("\033[36mDigite o departamento/setor: \033[0m")
     tipo = ler_enum(TipoAtivo, "\033[36mSelecione o Tipo de Ativo:\033[0m")
 
-    match tipo:
-        case "NOTEBOOK":
-            novo_ativo = Notebook(id_ativo, nome_ativo, responsavel, departamento)
-        case "SERVIDOR":
-            novo_ativo = Servidor(id_ativo, nome_ativo, responsavel, departamento)
-        case "BANCO_DE_DADOS":
-            novo_ativo = BancoDeDados(id_ativo, nome_ativo, responsavel, departamento)
-        case "ROTEADORES":
-            novo_ativo = Roteadores(id_ativo, nome_ativo, responsavel, departamento)
+    novo_ativo = fabrica_de_ativos[tipo](id_ativo, nome_ativo, responsavel, departamento)
     
     print("\nDeseja registrar uma vulnerabilidade inicial para este ativo?")
     print("1 - Sim\n2 - Não")
@@ -169,7 +156,7 @@ def atualizar_ativo():
         
     print("\n--- [ Módulo de Atualização ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo para atualizar: \033[0m"))
-    ativo = buscar_ativo_por_id(info_id)
+    ativo = gerenciador.buscar_ativo_por_id(info_id)
     if ativo:
         print("-" * 50)
         print("Escolha o que deseja modificar:\n 1 - Nome\n 2 - Responsável\n 3 - Departamento\n 4 - Tipo\n 5 - Voltar")
@@ -209,7 +196,7 @@ def excluir_ativo():
         return
 
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo que deseja excluir: \033[0m"))
-    ativo = buscar_ativo_por_id(info_id)
+    ativo = gerenciador.buscar_ativo_por_id(info_id)
     if ativo:
         es = ler_inteiro("\033[33m[AVISO] O ativo e suas vulnerabilidades serão excluídos. 1 - Confirmar ou 2 - Cancelar: \033[0m")
         if es == 1:
@@ -232,7 +219,7 @@ def gerenciar_vulnerabilidades():
 
     print("\n--- [ Gestão de Vulnerabilidades ] ---")
     info_id = str(ler_inteiro("\033[36mDigite o ID do ativo para gerenciar vulnerabilidades: \033[0m"))
-    ativo = buscar_ativo_por_id(info_id)
+    ativo = gerenciador.buscar_ativo_por_id(info_id)
     if not ativo:
         print(f"\n\033[33m[AVISO] ID {info_id} não existe.\033[0m")
         return
