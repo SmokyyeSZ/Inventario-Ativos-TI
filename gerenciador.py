@@ -50,3 +50,22 @@ class InventarioManager:
 
         self.salvar_dados()
         return True
+
+    def adicionar_lote(self, lista_ativos: Equipamentos): 
+        for lote in lista_ativos:
+            val_id = next((eq for eq in self.inventario if eq.get('id_ativo') == lote.id_ativo), None)
+            
+            if val_id:
+                continue
+                
+            self.inventario.append(lote.to_dict())
+
+        self.salvar_dados()
+        return True
+
+    def buscar_ativo_por_id(self,id_procurado):
+        ativo = next((eq for eq in self.inventario if eq.get('id_ativo') == id_procurado), None)
+        if ativo:
+            return ativo
+        else:
+            print(f"O id {id_procurado} não existe em nosso banco de dados.")
