@@ -19,12 +19,6 @@
 #[------------------------ ------------------------]
 #|                 BLOCO: Imports                  |
 #[------------------------ ------------------------]
-try:
-    import msvcrt
-    import os
-    sistema_windows = True
-except ImportError:
-    sistema_windows = False
 import os
 from motor_matematico import fabrica_de_ativos, MotorMatematico
 from cve_service import validar_formato_cve, ver_CVE
@@ -80,20 +74,6 @@ def limpar_tela():
 
 def pausar():
     input("\n\033[36mPressione ENTER para continuar...\033[0m")
-
-def pegar_tecla():
-    if sistema_windows:
-        return msvcrt.getch()
-    else:
-        import sys, tty, termios
-        fd = sys.stdin.fileno()
-        config_antiga = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            tecla = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, config_antiga)
-        return tecla.encode('utf-8')
 
 #[------------------------ ------------------------]
 #|                   BLOCO: CRUD                   |
