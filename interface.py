@@ -19,9 +19,14 @@
 #[------------------------ ------------------------]
 #|                 BLOCO: Imports                  |
 #[------------------------ ------------------------]
-
+try:
+    import msvcrt
+    import os
+    sistema_windows = True
+except ImportError:
+    sistema_windows = False
 import os
-from motor_matematico import fabrica_de_ativos
+from motor_matematico import fabrica_de_ativos, MotorMatematico
 from cve_service import validar_formato_cve, ver_CVE
 from modelos import TipoAtivo, SeveridadeVulnerabilidade, StatusTratamento, Equipamentos, Vulnerabilidade, Notebook, BancoDeDados, Roteadores, Servidor 
 from gerenciador import InventarioManager
@@ -41,8 +46,8 @@ def validar_id(id_procurado):
     val_id = next((eq for eq in gerenciador.inventario if eq.get('id_ativo') == id_procurado), None)
     if val_id:
         return True
-    else:
-        return False
+
+    return False
 
 def ler_inteiro(mensagem):
     while True:
@@ -75,6 +80,20 @@ def limpar_tela():
 
 def pausar():
     input("\n\033[36mPressione ENTER para continuar...\033[0m")
+
+def pegar_tecla():
+    if sistema_windows:
+        return msvcrt.getch()
+    else:
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        config_antiga = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            tecla = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, config_antiga)
+        return tecla.encode('utf-8')
 
 #[------------------------ ------------------------]
 #|                   BLOCO: CRUD                   |
@@ -137,6 +156,8 @@ def consultar_ativo():
 #[              SEÇÃO: Listar Ativos               ]
 
 def listar_ativos():
+    atualizar_riscos_rede()
+
     if not gerenciador.inventario:
         print("\033[31m[ERRO] O inventário está vazio.\033[0m")
         return
@@ -144,7 +165,7 @@ def listar_ativos():
     print("\n--- [ ATIVOS CADASTRADOS ] ---")
     for ativo_dict in gerenciador.inventario:
         print("~" * 60)
-        print(f"id_ativo: {ativo_dict['id_ativo']:<5} | Nome: {ativo_dict['nome']:<15} | Tipo: {ativo_dict['tipo']:<15} | Vulns: {len(ativo_dict['vulnerabilidades']):<5}")
+        print(f"id_ativo: {ativo_dict['id_ativo']:<5} | Nome: {ativo_dict['nome']:<15} | Tipo: {ativo_dict['tipo']:<15} | Vulns: {len(ativo_dict['vulnerabilidades']):<5} | Risco final: {ativo_dict['risco_final']} | Risco proprio: {ativo_dict['risco_proprio']}")
     print("~" * 60)
 
 #[              SEÇÃO: Atualizar Ativos            ]
@@ -318,3 +339,13 @@ def criar_vuln_para_ativo():
             print("\n\033[32m[SUCESSO] Vulnerabilidade cadastrada com sucesso!\033[0m")
             return nova_vuln
 
+def atualizar_riscos_rede():
+    mm = MotorMatematico()
+    solve = mm.calcular_risco_final()
+    if solve is not None:
+        for indice, ativo in enumerate(gerenciador.inventario):
+            ativo['risco_final'] = round(float(solve[indice]), 2)
+            ativo['risco_proprio'] = round(float(mm.montar_formula(ativo['id_ativo'])), 2)
+        gerenciador.salvar_dados()
+    else:
+        return None

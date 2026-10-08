@@ -62,10 +62,12 @@ class MotorMatematico:
         n = len(gerenciador.inventario)
 
         mi = np.eye(n)
-
-        solve = np.linalg.solve(mi - A, b)
-        prova_real = (mi - A) @ solve
-        if np.allclose(prova_real, b):
-            return solve
+        det = np.linalg.det(mi - A)
+        if np.isclose(det, 0):
+            print("A matriz não é invertível")
+            return None
         else:
-            print("O calculo falhou")
+            solve = np.linalg.solve(mi - A, b)
+            prova_real = (mi - A) @ solve
+            if np.allclose(prova_real, b):
+                return solve
