@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Novo Equipamento</title>
+    </head>
+    <body>
+        <h1>Registrar Novo Equipamento</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <p>
+                <label>ID do Ativo:</label>
+                <input type="text" name="id_ativo" required>
+            </p>
+            <p>
+                <label>Nome:</label>
+                <input type="text" name="nome" required>
+            </p>
+            <p>
+                <label>Responsável:</label>
+                <input type="text" name="responsavel" required>
+            </p>
+            <p>
+                <label>Departamento:</label>
+                <input type="text" name="departamento" required>
+            </p>
+            <p>
+                <label>Tipo:</label>
+                <input type="text" name="tipo" required>
+            </p>
+            <button type="submit">Salvar Equipamento</button>
+        </form>
+        <br>
+        <a href="{% url 'listar_equipamentos' %}">Voltar para a lista</a>
+    </body>
+</html>
