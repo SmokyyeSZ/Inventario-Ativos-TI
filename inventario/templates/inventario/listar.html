@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Inventário de Ativos</title>
+    </head>
+    <body>
+        <h1>Meu inventário de Equipamentos</h1>
+        <a href="{% url 'analisar_riscos' %}">Analisar os riscos</a>
+        <table border="1">
+            <tr>
+                <th>Nome</th>
+                <th>Departamento</th>
+                <th>Risco Final</th>
+                <th>Ações</th>
+            </tr>
+            {% for ativo in equipamentos %}
+            <tr>
+                <td>{{ ativo.nome }}</td>
+                <td>{{ ativo.departamento }}</td>
+                <td>{{ ativo.risco_final }}</td>
+                <td><a href="{% url 'apagar_equipamento' ativo.id %}" onclick="return confirm('Tem certeza que deseja apagar este equipamento?');">Apagar</a>, <a href="{% url 'editar_equipamento' ativo.id %}">Editar</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
