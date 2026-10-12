@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Nova Vulnerabilidade</title>
+    </head>
+    <body>
+        <h1>Registrar CVE</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <p>
+                <label>Codigo CVE:</label>
+                <input placeholder="Exemplo: CVE-2026-9999" type="text" name="cve" required>
+            </p>
+            <button type="submit">Salvar CVE</button>
+        </form>
+        <br>
+        <a href="{% url 'listar_equipamentos' %}">Voltar para a lista</a>
+    </body>
+</html>

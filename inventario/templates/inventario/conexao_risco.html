@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Conexão de riscos</title>
+    </head>
+    <body>
+        <h1>Conexão de riscos</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <select name="id_ativo">
+                {% for ativo in outros_equipamentos %}
+                    <option value="{{ ativo.id }}"> {{ ativo.nome }} </option>
+                {% endfor %}
+            </select>
+            <button type="submit">Salvar</button>
+        </form>
+    </body>
+</html>

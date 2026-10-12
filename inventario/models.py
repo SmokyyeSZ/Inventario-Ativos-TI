@@ -15,6 +15,6 @@ class Equipamento(models.Model):
     departamento = models.CharField(max_length=100)
     tipo = models.CharField(max_length=100)
     vulnerabilidades = models.ManyToManyField(Vulnerabilidade, blank=True)
-    conexoes = models.ManyToManyField('self', blank=True)
+    conexoes = models.ManyToManyField('self', blank=True, symmetrical=False)
     risco_proprio = models.FloatField(default=0.0)
     risco_final = models.FloatField(default=0.0)
