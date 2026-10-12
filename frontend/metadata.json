@@ -1,0 +1,6 @@
+{
+  "name": "Jester RiskPropagate - IT Asset Risk & Network Propagation SOC",
+  "description": "Painel de cibersegurança e gestão de riscos em tempo real com propagação matricial de vulnerabilidades, inventário de TI e integração CVE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
