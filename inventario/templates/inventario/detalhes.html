@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Detalhes do Equipamento</title>
+    </head>
+    <body>
+        <h1>{{ ativo.nome }}</h1>
+        <p><strong>Departamento:</strong> {{ ativo.departamento }}</p>
+        <p><strong>Risco Atual:</strong> {{ ativo.risco_final }}</p>
+        <a href="{% url 'editar_equipamento' ativo.id %}">Editar</a> 
+        <a href="{% url 'CVE' ativo.id %}">Vincular CVE</a>
+        <a href="{% url 'conexao' ativo.id %}">Conectar</a>
+        <hr>
+        <h2>Vulnerabilidades (CVEs)</h2>
+        <ul>
+            {% for vuln in ativo.vulnerabilidades.all %}
+                <li>{{ vuln.cve_code }} <a href="{% url 'remover_cve' ativo.id vuln.cve_code %}">Remover</a></li>
+            {% endfor %}
+        </ul>
+        <h2>Conexões de Rede</h2>
+        <ul>
+            {% for conexao in ativo.conexoes.all %}
+                <li>{{ conexao.nome }} <a href="{% url 'desconectar' ativo.id conexao.id %}">desconectar</a></li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
-from .models import Equipamento
+from .models import Equipamento, Vulnerabilidade
 from .motor_matematico import MotorMatematico
+from .cve_service import CVEService
 
 def listar_equipamentos(request):
     ativos = Equipamento.objects.all()
@@ -58,3 +59,54 @@ def analisar_riscos(request):
     motor.calcular_risco_rede()
 
     return redirect('listar_equipamentos')
+
+def vincular_cve(request, id):
+    equipamento = Equipamento.objects.get(id=id)
+    servico = CVEService()
+    if request.method == 'POST':
+        codigo_cve = request.POST.get('cve')
+        falha = servico.buscar_e_salvar_cve(codigo_cve)
+        if falha:
+            equipamento.vulnerabilidades.add(falha)
+            return redirect('listar_equipamentos')
+
+    contexto = {
+        'ativo': equipamento
+    }
+        
+    return render(request, 'inventario/vincular_cve.html', contexto)
+
+def conexao_risco(request, id):
+    equipamentos = Equipamento.objects.get(id=id)
+    outros_equipamentos = Equipamento.objects.exclude(id=id)
+
+    if request.method == 'POST':
+        id_ativo = request.POST.get('id_ativo')
+        equipamento_alvo = Equipamento.objects.get(id=id_ativo)
+        equipamentos.conexoes.add(equipamento_alvo)
+        return redirect('listar_equipamentos')
+
+    contexto = {
+        'equipamentos': equipamentos,
+        'outros_equipamentos': outros_equipamentos
+    }
+    return render(request, 'inventario/conexao_risco.html', contexto)
+
+def detalhes_equipamentos(request, id):
+    ativo = Equipamento.objects.get(id=id)
+    contexto = {
+        'ativo': ativo
+    }
+    return render(request,'inventario/detalhes.html', contexto)
+
+def desconectar(request, id, conexao_id):
+    ativo = Equipamento.objects.get(id=id)
+    alvo = Equipamento.objects.get(id=conexao_id)
+    ativo.conexoes.remove(alvo)
+    return redirect('detalhes', id=id)
+
+def remover_cve(request, id, cve_code):
+    ativo = Equipamento.objects.get(id=id)
+    vuln = Vulnerabilidade.objects.get(cve_code=cve_code)
+    ativo.vulnerabilidades.remove(vuln)
+    return redirect('detalhes', id=id)
