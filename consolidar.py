@@ -4,7 +4,7 @@ NOME_DA_PASTA_DO_PROJETO = "Inventario-Ativos-TI"
 
 IGNORE_DIRS = {'venv', '.git', '__pycache__', 'staticfiles', 'media', 'migrations', '.pytest_cache'}
 IGNORE_FILES = {'db.sqlite3', 'consolidar.py', '.gitignore', 'package-lock.json', 'contexto_projeto.txt'}
-VALID_EXTENSIONS = {'.py', '.html', '.css', '.js', '.md', '.txt', '.json'}
+VALID_EXTENSIONS = {'.py', '.html', '.css', '.js', '.md', '.txt', '.json','.ts','.tsx'}
 
 def consolidar_projeto(diretorio_raiz, arquivo_saida):
     if not os.path.exists(diretorio_raiz):
