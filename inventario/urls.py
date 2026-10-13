@@ -12,4 +12,7 @@ urlpatterns = [
     path('equipamentos/detalhes_equipamentos/<int:id>/', views.detalhes_equipamentos, name='detalhes'),
     path('equipamentos/remover_cve/<int:id>/<str:cve_code>/', views.remover_cve, name='remover_cve'),
     path('equipamentos/desconectar/<int:id>/<int:conexao_id>/', views.desconectar, name='desconectar'),
+    path('api/equipamentos/', views.EquipamentoListCreate.as_view(), name='api_equipamentos'),
+    path('api/vulnerabilidades/', views.VulnerabilidadesListCreate.as_view(), name='api_vulnerabilidades'),
+    path('api/equipamentos/<int:pk>/', views.EquipamentoDetalheAPI.as_view(), name='api_equipamento'),
 ]

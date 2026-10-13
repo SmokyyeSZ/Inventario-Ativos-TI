@@ -2,38 +2,42 @@
 
 @layer base {
   :root {
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color-scheme: dark;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   }
-
+  
   body {
     font-family: var(--font-sans);
+    background-color: #070b12;
     color: #e2e8f0;
-    background-color: #080c14;
     overflow-x: hidden;
   }
 }
 
-/* Cyber grid pattern matching the user's dashboard topology screenshot */
-.bg-grid-cyber {
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.cyber-grid {
   background-image: 
-    linear-gradient(to right, rgba(30, 41, 59, 0.4) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(30, 41, 59, 0.4) 1px, transparent 1px);
-  background-size: 28px 28px;
+    linear-gradient(to right, rgba(239, 68, 68, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-.bg-radial-glow {
-  background: radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.08) 0%, rgba(6, 182, 212, 0.04) 50%, transparent 80%);
+.cyber-dots {
+  background-image: radial-gradient(rgba(244, 63, 94, 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
-/* Custom sleek dark scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #090e17;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -42,5 +46,5 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #dc2626;
 }

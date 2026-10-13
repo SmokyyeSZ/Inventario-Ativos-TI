@@ -1,6 +1,6 @@
 {
-  "name": "Jester RiskPropagate - IT Asset Risk & Network Propagation SOC",
-  "description": "Painel de cibersegurança e gestão de riscos em tempo real com propagação matricial de vulnerabilidades, inventário de TI e integração CVE.",
+  "name": "Jester Risk - Cybersecurity Dashboard",
+  "description": "Painel avançado de cibersegurança e propagação de risco com temática Jester Dark Mode, grafos de topologia de rede, heatmaps CVSS, inventário de ativos e detalhamento de equipamentos.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

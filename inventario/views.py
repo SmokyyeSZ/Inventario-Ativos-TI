@@ -1,5 +1,7 @@
+from rest_framework import generics
 from django.shortcuts import render, redirect
 from .models import Equipamento, Vulnerabilidade
+from .serializers import EquipamentoSerializers, VulnerabilidadeSerializers
 from .motor_matematico import MotorMatematico
 from .cve_service import CVEService
 
@@ -94,8 +96,10 @@ def conexao_risco(request, id):
 
 def detalhes_equipamentos(request, id):
     ativo = Equipamento.objects.get(id=id)
+    equipamentos = Equipamento.objects.all()
     contexto = {
-        'ativo': ativo
+        'ativo': ativo,
+        'equipamentos': equipamentos
     }
     return render(request,'inventario/detalhes.html', contexto)
 
@@ -110,3 +114,15 @@ def remover_cve(request, id, cve_code):
     vuln = Vulnerabilidade.objects.get(cve_code=cve_code)
     ativo.vulnerabilidades.remove(vuln)
     return redirect('detalhes', id=id)
+
+class EquipamentoListCreate(generics.ListCreateAPIView):
+    queryset = Equipamento.objects.all()
+    serializer_class = EquipamentoSerializers
+
+class VulnerabilidadesListCreate(generics.ListCreateAPIView):
+    queryset = Vulnerabilidade.objects.all()
+    serializer_class = VulnerabilidadeSerializers
+
+class EquipamentoDetalheAPI(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Equipamento.objects.all()
+    serializer_class = EquipamentoSerializers

@@ -18,3 +18,17 @@ class Equipamento(models.Model):
     conexoes = models.ManyToManyField('self', blank=True, symmetrical=False)
     risco_proprio = models.FloatField(default=0.0)
     risco_final = models.FloatField(default=0.0)
+    ip = models.CharField(max_length=15, default='')
+    mac = models.CharField(max_length=17, default='')
+    sistema_operacional = models.CharField(max_length=100, null=True, blank=True)
+    NIVEIS_CRITICIDADE = [
+        ('Critical', 'Crítica (Tier 1 Core)'),
+        ('High', 'Alta (Produção)'),
+        ('Medium', 'Média (Apoio)'),
+        ('Low', 'Baixa (Periférico)'),
+    ]
+    criticidade = models.CharField(
+        max_length=20, 
+        choices=NIVEIS_CRITICIDADE, 
+        default='Medium'
+    )
