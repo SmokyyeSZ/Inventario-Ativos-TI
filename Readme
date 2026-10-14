@@ -1,7 +1,7 @@
 O README esta desatualizado(14/10/2026)
 
 [ SOBRE O USO DE IA ]
-arte do site foi criado primeiro com google flows usando sites reais do mercado de trabalho, desenhos e cores criados por mim que eu considerei perfeitas para o sistema, ou seja o flows criou as imagens de exemplos.
+arte do site foi criado primeiro com google flows usando sites reais do mercado de trabalho, desenhos feitos a mão e cores escolhidas por mim que eu considerei perfeitas para o sistema, ou seja o flows criou as imagens de exemplos.
 
 Usando um prompt gerado pelo gemini mais as imagens geradas pelo flow eu pedi para que o google studio AI desse vida as imagens, ele criou todo o html e css sem tocar em nada do backend que foi uma das principais regras descritas no meu prompt.
 
