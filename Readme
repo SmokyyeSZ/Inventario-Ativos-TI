@@ -1,3 +1,14 @@
+O README esta desatualizado(14/10/2026)
+
+[ SOBRE O USO DE IA ]
+arte do site foi criado primeiro com google flows usando sites reais do mercado de trabalho, desenhos e cores criados por mim que eu considerei perfeitas para o sistema, ou seja o flows criou as imagens de exemplos.
+
+Usando um prompt gerado pelo gemini mais as imagens geradas pelo flow eu pedi para que o google studio AI desse vida as imagens, ele criou todo o html e css sem tocar em nada do backend que foi uma das principais regras descritas no meu prompt.
+
+Por fim usei o copilot pra debugar meu codigo e apontar todas as falhas que tiver.
+
+o uso da IA foi utilizado somento pra gerar o frontend ou seja somente pra "maquiar a cara do app", backend, debugs e etc foram feitos a mão
+
 # 💻 Sistema de Inventário de Ativos e Vulnerabilidades de TI
 
 Este projeto é uma aplicação em Python desenvolvida para simular, de forma simplificada, uma base de inventário de segurança utilizada por uma equipe de Computação ou Cibersegurança. Ele permite gerenciar recursos computacionais e acompanhar falhas de segurança de forma automatizada e manual.
