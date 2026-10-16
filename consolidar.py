@@ -2,7 +2,7 @@ import os
 
 NOME_DA_PASTA_DO_PROJETO = "Inventario-Ativos-TI"  
 
-IGNORE_DIRS = {'venv', '.git', '__pycache__', 'staticfiles', 'media', 'migrations', '.pytest_cache'}
+IGNORE_DIRS = {'venv', '.git', '__pycache__', 'staticfiles', 'media', 'migrations', '.pytest_cache', 'node_modules', 'dist', '.vite'}
 IGNORE_FILES = {'db.sqlite3', 'consolidar.py', '.gitignore', 'package-lock.json', 'contexto_projeto.txt'}
 VALID_EXTENSIONS = {'.py', '.html', '.css', '.js', '.md', '.txt', '.json','.ts','.tsx'}
 
@@ -10,7 +10,7 @@ def consolidar_projeto(diretorio_raiz, arquivo_saida):
     if not os.path.exists(diretorio_raiz):
         print(f"Erro: A pasta '{diretorio_raiz}' não foi encontrada no diretório atual.")
         return
-
+    
     with open(arquivo_saida, 'w', encoding='utf-8') as out:
         for raiz, dirs, arquivos in os.walk(diretorio_raiz):
             dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
@@ -27,10 +27,18 @@ def consolidar_projeto(diretorio_raiz, arquivo_saida):
                     out.write(f"\n{'='*40}\n")
                     out.write(f"ARQUIVO: {caminho_relativo}\n")
                     out.write(f"{'='*40}\n\n")
-                    
+
                     try:
+                        # 1ª tentativa: padrão UTF-8
                         with open(caminho_completo, 'r', encoding='utf-8') as f:
                             out.write(f.read())
+                    except UnicodeDecodeError:
+                        # 2ª tentativa: se falhar por codificação (ex: requirements.txt), tenta UTF-16
+                        try:
+                            with open(caminho_completo, 'r', encoding='utf-16') as f:
+                                out.write(f.read())
+                        except Exception as e:
+                            out.write(f"[Erro ao ler arquivo: {e}]\n")
                     except Exception as e:
                         out.write(f"[Erro ao ler arquivo: {e}]\n")
 

@@ -9,7 +9,7 @@ class Vulnerabilidade(models.Model):
     cve_code = models.CharField(max_length=20, unique=True)
 
 class Equipamento(models.Model):
-    id_ativo = models.IntegerField()
+    id_ativo = models.IntegerField(default=0)
     nome = models.CharField(max_length=100)
     responsavel = models.CharField(max_length=100)
     departamento = models.CharField(max_length=100)
