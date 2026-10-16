@@ -13,6 +13,7 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
   const [departamento, setDepartamento] = useState('Infraestrutura Cloud');
   const [ip, setIp] = useState('10.100.');
   const [tipo, setTipo] = useState<Asset['tipo']>('Internal Server');
+  const [responsavel,setResponsavel] = useState('');
   const [criticidade, setCriticidade] = useState<SeverityLevel>('High');
   const [sistemaOperacional, setSistemaOperacional] = useState('Ubuntu Linux 24.04 LTS');
 
@@ -31,6 +32,7 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
       ip: ip.trim(),
       mac: '00:1A:2B:' + Math.floor(10 + Math.random() * 89) + ':' + Math.floor(10 + Math.random() * 89) + ':' + Math.floor(10 + Math.random() * 89),
       tipo,
+      responsavel,
       criticidade,
       riscoFinal: baseRisk,
       pesoPropagacao: baseRisk / 12,
@@ -83,6 +85,17 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
                 required
                 value={departamento}
                 onChange={(e) => setDepartamento(e.target.value)}
+                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div>
+              <label className='block text-xs font-mono text-slate-400 mb-1.5'>Responsavel</label>
+              <input
+                type="text"
+                required
+                value={responsavel}
+                onChange={(e) => setResponsavel(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
               />
             </div>

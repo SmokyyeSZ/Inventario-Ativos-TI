@@ -26,6 +26,7 @@ import { LinkCveModal } from './components/LinkCveModal';
 import { ConnectTerminalModal } from './components/ConnectTerminalModal';
 import { AddAssetModal } from './components/AddAssetModal';
 import { ApiConfigModal } from './components/ApiConfigModal';
+import { createAssetOnServer } from './services/api';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
@@ -107,9 +108,10 @@ export const App: React.FC = () => {
     setSelectedAsset(updatedAsset);
   };
 
-  const handleAddAsset = (newAsset: Asset) => {
-    setAssets((prev) => [newAsset, ...prev]);
-    setSelectedAsset(newAsset);
+  const handleAddAsset = async (newAsset: Asset) => {
+    const created = await createAssetOnServer(newAsset);
+    setAssets((prev) => [created, ...prev]);
+    setSelectedAsset(created);
   };
 
   return (

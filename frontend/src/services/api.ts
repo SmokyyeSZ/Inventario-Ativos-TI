@@ -395,6 +395,15 @@ export async function fetchAssetById(id: string): Promise<Asset | null> {
   }
 }
 
+export async function createAssetOnServer(newAsset: Partial<Asset>): Promise<Asset> {
+  try {
+    const res = await apiClient.post<Asset>(`equipamentos/`, newAsset);
+    return res.data
+  } catch (error){
+    throw error;
+  }
+}
+
 export async function updateAssetOnServer(id: string, updated: Partial<Asset>): Promise<Asset> {
   try {
     const res = await apiClient.patch<Asset>(`equipamentos/${id}/`, updated);
