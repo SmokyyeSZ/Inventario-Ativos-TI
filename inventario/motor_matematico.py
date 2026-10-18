@@ -23,20 +23,26 @@ class MotorMatematico:
         id_para_indice = {ativo.id: indice for indice, ativo in enumerate(ativos)}
 
         for i, ativo in enumerate(ativos):
-            #--- CÁLCULO DO VETOR B (Risco proprio) ---#
-            score_total = sum(vuln.score for vuln in ativo.vulnerabilidades.all())
+            score_total = sum(vuln.score for vuln in ativo.vulnerabilidades.all() if vuln.status != 'Corrigido')
 
             expo = self.fatores_exposicao.get(ativo.criticidade.upper(), 1.0)
 
             risco_proprio = score_total * expo
             vetor_b[i] = risco_proprio
 
-            #--- CÁLCULO DA MATRIZ A (Conexões) ---#
-
             for conexao in ativo.conexoes_origem.all():
-                if conexao.destino.id in id_para_indice:
+                if conexao.status == 'Bloqueada':
+                    continue
+                elif conexao.destino.id in id_para_indice:
                     j = id_para_indice[conexao.destino.id]
-                    matriz_A[i][j] = conexao.peso_propagacao
+                    peso = conexao.peso_propagacao
+                    if conexao.direcao == 'Bidirecional':
+                        matriz_A[i][j] = peso
+                        matriz_A[j][i] = peso
+                    elif conexao.direcao == 'Inbound':
+                        matriz_A[j][i] = peso
+                    else:
+                        matriz_A[i][j] = peso
 
         mi = np.eye(n)
         det = np.linalg.det(mi - matriz_A)

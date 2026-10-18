@@ -40,18 +40,21 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
   onAddConnection,
   onDeleteConnection,
 }) => {
+  const otherAssets = allAssets.filter((a) => String(a.id) !== String(asset.id));
   const [showAddConn, setShowAddConn] = useState(false);
-  const [targetAssetId, setTargetAssetId] = useState(allAssets[0]?.id || '');
+  const [targetAssetId, setTargetAssetId] = useState(otherAssets[0]?.id || '');
   const [port, setPort] = useState(443);
   const [protocol, setProtocol] = useState('HTTPS / TLS');
   const [weight, setWeight] = useState(0.5);
   const [direction, setDirection] = useState<NetworkConnection['direcao']>('Bidirecional');
 
-  const otherAssets = allAssets.filter((a) => a.id !== asset.id);
+  const selectedTargetId = otherAssets.some((a) => String(a.id) === String(targetAssetId))
+    ? targetAssetId
+    : otherAssets[0]?.id || '';
 
   const handleCreateConnection = (e: React.FormEvent) => {
     e.preventDefault();
-    const targetAsset = allAssets.find((a) => a.id === targetAssetId);
+    const targetAsset = otherAssets.find((a) => String(a.id) === String(selectedTargetId));
     if (!targetAsset) return;
 
     const newConn: NetworkConnection = {
@@ -294,7 +297,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                 <div>
                   <label className="block text-[11px] font-mono text-slate-400 mb-1">Destino</label>
                   <select
-                    value={targetAssetId}
+                    value={selectedTargetId}
                     onChange={(e) => setTargetAssetId(e.target.value)}
                     className="w-full px-2.5 py-1.5 bg-[#0a1120] border border-slate-700 rounded text-xs font-mono text-slate-200"
                   >

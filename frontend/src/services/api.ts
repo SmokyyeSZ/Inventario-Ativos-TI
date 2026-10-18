@@ -411,15 +411,8 @@ export async function updateAssetOnServer(id: string, updated: Partial<Asset>): 
 }
 
 export async function linkCveToAssetOnServer(assetId: string, cve: CveItem): Promise<Asset> {
-  try {
-    const res = await apiClient.post<Asset>(`equipamentos/${assetId}/cves/`, cve);
-    return res.data;
-  } catch {
-    const asset = initialAssets.find(a => a.id === assetId) || initialAssets[0];
-    const exists = asset.cves.some(c => c.id === cve.id);
-    const updatedCves = exists ? asset.cves : [...asset.cves, cve];
-    return { ...asset, cves: updatedCves };
-  }
+  const res = await apiClient.post<Asset>(`equipamentos/${assetId}/cves/`, cve);
+  return res.data;
 }
 
 export async function unlinkCveOnServer(assetId: string, cveId: string): Promise<void> {

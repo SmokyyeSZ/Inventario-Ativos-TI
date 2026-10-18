@@ -128,6 +128,15 @@ class EquipamentoDetalheAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Equipamento.objects.all()
     serializer_class = EquipamentoSerializers
 
+    def perform_update(self, serializer):
+        instancia = serializer.save()
+        MotorMatematico().calcular_risco_rede()
+        instancia.refresh_from_db()
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        MotorMatematico().calcular_risco_rede()
+
 class AdicionarConexaoAPI(APIView):
     def post(self, request, pk):
         try:
@@ -140,13 +149,15 @@ class AdicionarConexaoAPI(APIView):
             protocolo = request.data.get('protocolo', 'HTTPS')
             direcao = request.data.get('direcao', 'Bidirecional')
 
-            ConexaoRede.objects.create(
+            ConexaoRede.objects.update_or_create(
                 origem=origem,
                 destino=destino,
-                peso_propagacao=peso,
-                porta=porta,
-                protocolo=protocolo,
-                direcao=direcao
+                defaults={
+                    'peso_propagacao': peso,
+                    'porta': porta,
+                    'protocolo': protocolo,
+                    'direcao': direcao,
+                }
             )
 
             motor = MotorMatematico()
@@ -168,7 +179,7 @@ class AdicionarCveAPI(APIView):
             codigo_cve = request.data.get('id') 
             
             servico = CVEService()
-            cve = servico.buscar_e_salvar_cve(codigo_cve)
+            cve = servico.buscar_e_salvar_cve(codigo_cve, request.data)
             
             if cve:
                 origem.vulnerabilidades.add(cve)
@@ -213,11 +224,19 @@ class DashboardMetricsAPI(APIView):
         num_conexoes = 0
         for i, ativo in enumerate(ativos):
             for conexao in ativo.conexoes_origem.all():
-                if conexao.destino.id in id_para_indice:
+                if conexao.status == 'Bloqueada':
+                    continue
+                elif conexao.destino.id in id_para_indice:
                     j = id_para_indice[conexao.destino.id]
-                    matriz_A[i][j] = conexao.peso_propagacao
-                    num_conexoes += 1
-
+                    peso = conexao.peso_propagacao
+                    if conexao.direcao == 'Bidirecional':
+                        matriz_A[i][j] = peso
+                        matriz_A[j][i] = peso
+                    elif conexao.direcao == 'Inbound':
+                        matriz_A[j][i] = peso
+                    else:
+                        matriz_A[i][j] = peso
+        num_conexoes = int(np.count_nonzero(matriz_A))
         densidade = num_conexoes / (n * n) if n > 0 else 0
 
         try:
