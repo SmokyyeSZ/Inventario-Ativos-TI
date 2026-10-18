@@ -13,14 +13,17 @@ class CVEService:
                 if dados.get('vulnerabilities'):
                     item = dados["vulnerabilities"][0]["cve"]
                     descricao = item["descriptions"][0]["value"]
+                    publicado = item.get("published", "")[:10]
 
                     try:
                         metricas = item["metrics"]["cvssMetricV31"][0]["cvssData"]
                         score = metricas["baseScore"]
-                        severidade = metricas["baseSeverity"]
+                        severidade = metricas["baseSeverity"].capitalize()
+                        vetor_ataque = metricas.get("attackVector", "Network / Unauthenticated")
                     except KeyError:
                         score = 0.0
-                        severidade = "DESCONHECIDO"
+                        severidade = "Medium"
+                        vetor_ataque = "Network / Unauthenticated"
 
                     vuln, criada = Vulnerabilidade.objects.get_or_create(
                         cve_code=cve_id,
@@ -30,6 +33,8 @@ class CVEService:
                             'severidade': severidade,
                             'status': 'Ativa',
                             'score': score,
+                            'vetor_ataque': vetor_ataque,
+                            'data_descoberta': publicado,
                         }
                     )
 

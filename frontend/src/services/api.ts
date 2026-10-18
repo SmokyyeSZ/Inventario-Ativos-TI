@@ -367,27 +367,24 @@ export const initialAssets: Asset[] = [
   },
 ];
 
+export function updateApiBaseUrl(newUrl: string) {
+  const target = newUrl.endsWith('/') ? newUrl : `${newUrl}/`;
+  apiClient.defaults.baseURL = target;
+}
+
 export async function fetchDashboardMetrics(): Promise<RiskPropagationMetrics> {
-  try {
-    const res = await apiClient.get<RiskPropagationMetrics>('/metrics/');
-    return res.data;
-  } catch {
-    return initialMetrics;
-  }
+  const res = await apiClient.get<RiskPropagationMetrics>('/metrics/');
+  return res.data;
 }
 
 export async function fetchAssets(): Promise<Asset[]> {
-  try {
-    const res = await apiClient.get<Asset[]>('/equipamentos/');
-    return res.data;
-  } catch {
-    return initialAssets;
-  }
+  const res = await apiClient.get<Asset[]>('/equipamentos/');
+  return res.data;
 }
 
 export async function fetchAssetById(id: string): Promise<Asset | null> {
   try {
-    const res = await apiClient.get<Asset>(`/assets/${id}/`);
+    const res = await apiClient.get<Asset>(`equipamentos/${id}/`);
     return res.data;
   } catch {
     const found = initialAssets.find(a => a.id === id);
@@ -415,7 +412,7 @@ export async function updateAssetOnServer(id: string, updated: Partial<Asset>): 
 
 export async function linkCveToAssetOnServer(assetId: string, cve: CveItem): Promise<Asset> {
   try {
-    const res = await apiClient.post<Asset>(`/assets/${assetId}/cves/`, cve);
+    const res = await apiClient.post<Asset>(`equipamentos/${assetId}/cves/`, cve);
     return res.data;
   } catch {
     const asset = initialAssets.find(a => a.id === assetId) || initialAssets[0];
@@ -427,7 +424,7 @@ export async function linkCveToAssetOnServer(assetId: string, cve: CveItem): Pro
 
 export async function unlinkCveOnServer(assetId: string, cveId: string): Promise<void> {
   try {
-    await apiClient.delete(`/assets/${assetId}/cves/${cveId}/`);
+    await apiClient.delete(`equipamentos/${assetId}/cves/${cveId}/`);
   } catch {
     return;
   }
@@ -435,17 +432,17 @@ export async function unlinkCveOnServer(assetId: string, cveId: string): Promise
 
 export async function addConnectionOnServer(assetId: string, connection: NetworkConnection): Promise<Asset> {
   try {
-    const res = await apiClient.post<Asset>(`/assets/${assetId}/connections/`, connection);
+    // Altere de /assets/... para equipamentos/...
+    const res = await apiClient.post<Asset>(`equipamentos/${assetId}/connections/`, connection);
     return res.data;
-  } catch {
-    const asset = initialAssets.find(a => a.id === assetId) || initialAssets[0];
-    return { ...asset, conexoes: [...asset.conexoes, connection] };
+  } catch (error) {
+    throw error;
   }
 }
 
 export async function deleteConnectionOnServer(assetId: string, connectionId: string): Promise<void> {
   try {
-    await apiClient.delete(`/assets/${assetId}/connections/${connectionId}/`);
+    await apiClient.delete(`equipamentos/${assetId}/connections/${connectionId}/`);
   } catch {
     return;
   }
@@ -453,7 +450,7 @@ export async function deleteConnectionOnServer(assetId: string, connectionId: st
 
 export async function testConnectionPing(assetId: string): Promise<{ success: boolean; latencyMs: number; openPorts: number[] }> {
   try {
-    const res = await apiClient.post<{ success: boolean; latencyMs: number; openPorts: number[] }>(`/assets/${assetId}/ping/`);
+    const res = await apiClient.post<{ success: boolean; latencyMs: number; openPorts: number[] }>(`equipamentos/${assetId}/ping/`);
     return res.data;
   } catch {
     return {

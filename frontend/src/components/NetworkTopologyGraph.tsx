@@ -27,29 +27,6 @@ interface GraphLink {
   riskFlow: boolean;
 }
 
-const DEFAULT_NODES: GraphNode[] = [
-  { id: 'ast-01', name: 'Database (PROD-DB-01)', type: 'Database', x: 280, y: 190, risk: 9.8, status: 'compromised' },
-  { id: 'ast-02', name: 'Gateway (GATEWAY-02)', type: 'Gateway', x: 130, y: 120, risk: 9.2, status: 'warning' },
-  { id: 'ast-03', name: 'Internal Server', type: 'Internal Server', x: 420, y: 150, risk: 8.4, status: 'warning' },
-  { id: 'ast-04', name: 'Migration SRV', type: 'Internal Server', x: 370, y: 280, risk: 7.8, status: 'warning' },
-  { id: 'ast-05', name: 'Firewall-Main', type: 'Firewall', x: 190, y: 310, risk: 4.8, status: 'online' },
-  { id: 'ast-06', name: 'Cloud Endpoint', type: 'Cloud Endpoint', x: 520, y: 220, risk: 5.2, status: 'online' },
-  { id: 'ast-07', name: 'Workstation 14', type: 'Workstation', x: 80, y: 240, risk: 2.1, status: 'online' },
-  { id: 'ast-08', name: 'Workstation Core', type: 'Workstation', x: 460, y: 60, risk: 3.4, status: 'online' },
-];
-
-const DEFAULT_LINKS: GraphLink[] = [
-  { source: 'ast-02', target: 'ast-01', weight: 0.85, riskFlow: true },
-  { source: 'ast-03', target: 'ast-01', weight: 0.72, riskFlow: true },
-  { source: 'ast-04', target: 'ast-01', weight: 0.45, riskFlow: true },
-  { source: 'ast-05', target: 'ast-02', weight: 0.35, riskFlow: false },
-  { source: 'ast-05', target: 'ast-01', weight: 0.40, riskFlow: false },
-  { source: 'ast-06', target: 'ast-03', weight: 0.30, riskFlow: false },
-  { source: 'ast-07', target: 'ast-05', weight: 0.10, riskFlow: false },
-  { source: 'ast-08', target: 'ast-03', weight: 0.18, riskFlow: false },
-  { source: 'ast-06', target: 'ast-04', weight: 0.25, riskFlow: false },
-];
-
 export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
   assets,
   onSelectAsset,
@@ -61,12 +38,42 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const nodes = DEFAULT_NODES.map((dn) => {
-    const liveAsset = assets.find((a) => a.id === dn.id);
-    return liveAsset
-      ? { ...dn, risk: liveAsset.riscoFinal, status: liveAsset.status, name: liveAsset.nome }
-      : dn;
+  const centerX = 340;
+  const centerY = 190;
+  const radiusX = 175;
+  const radiusY = 125;
+
+  const nodes: GraphNode[] = assets.map((asset, index) => {
+    let x = centerX;
+    let y = centerY;
+
+    if (assets.length === 2) {
+      x = index === 0 ? centerX - 110 : centerX + 110;
+    } else if (assets.length > 2) {
+      const angle = (2 * Math.PI * index) / assets.length - Math.PI / 2;
+      x = Math.round(centerX + radiusX * Math.cos(angle));
+      y = Math.round(centerY + radiusY * Math.sin(angle));
+    }
+
+    return {
+      id: String(asset.id),
+      name: asset.nome,
+      type: asset.tipo,
+      x,
+      y,
+      risk: Number(asset.riscoFinal ?? 0),
+      status: asset.status || 'online',
+    };
   });
+
+  const links: GraphLink[] = assets.flatMap((asset) =>
+    (asset.conexoes || []).map((conn) => ({
+      source: String(conn.origemId ?? asset.id),
+      target: String(conn.destinoId),
+      weight: Number(conn.pesoPropagacao ?? 0.1),
+      riskFlow: Number(asset.riscoFinal ?? 0) >= 7.0 || Number(conn.pesoPropagacao ?? 0) >= 0.5,
+    }))
+  );
 
   const filteredNodes = nodes.filter((n) =>
     n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,7 +89,7 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
 
   const handleNodeClick = (nodeId: string) => {
     setHighlightedNode(nodeId);
-    const asset = assets.find((a) => a.id === nodeId);
+    const asset = assets.find((a) => String(a.id) === String(nodeId));
     if (asset) {
       onSelectAsset(asset);
     }
@@ -161,7 +168,7 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
             </filter>
           </defs>
 
-          {DEFAULT_LINKS.map((link, idx) => {
+          {links.map((link, idx) => {
             const sNode = nodes.find((n) => n.id === link.source);
             const tNode = nodes.find((n) => n.id === link.target);
             if (!sNode || !tNode) return null;
@@ -303,12 +310,21 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
             <Cpu className="w-3.5 h-3.5 text-rose-500" />
             Matriz de Adjacência
           </p>
-          <div className="bg-[#05080f] p-2 rounded border border-slate-800/80 mb-2.5">
-            <div className="text-[10px] text-cyan-300 leading-tight">
-              P = [ [1, 0, 1, 0, 0],<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;[0, 1, 1, 0, 0],<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;[0, 0, 0, 1, 1],<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;[0, 0, 0, 0, 0] ]
+          <div className="bg-[#05080f] p-2 rounded border border-slate-800/80 mb-2.5 overflow-x-auto">
+            <div className="text-[10px] text-cyan-300 leading-tight whitespace-pre">
+              {assets.length === 0
+                ? 'P = [ ]'
+                : assets.slice(0, 5).map((rowAsset, rIdx, arr) => {
+                    const rowVals = arr.map((colAsset) => {
+                      const conn = (rowAsset.conexoes || []).find(
+                        (c) => String(c.destinoId) === String(colAsset.id)
+                      );
+                      return conn ? Number(conn.pesoPropagacao).toFixed(1) : '0';
+                    });
+                    const prefix = rIdx === 0 ? 'P = [ ' : '      ';
+                    const suffix = rIdx === arr.length - 1 ? ' ]' : ',';
+                    return `${prefix}[${rowVals.join(', ')}]${suffix}`;
+                  }).join('\n')}
             </div>
           </div>
           <div>

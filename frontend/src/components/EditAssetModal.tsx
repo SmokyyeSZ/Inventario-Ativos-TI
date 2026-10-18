@@ -146,15 +146,15 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
             <div>
               <label className="block text-xs font-mono text-slate-400 mb-1.5">Criticidade Operacional</label>
               <select
-              required
+                required
                 value={criticidade}
                 onChange={(e) => setCriticidade(e.target.value as SeverityLevel)}
-                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-rose-500"
+                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
               >
-                <option value="Critical">Crítica (Tier 1 Core)</option>
-                <option value="High">Alta (Produção)</option>
-                <option value="Medium">Média (Apoio)</option>
-                <option value="Low">Baixa (Periférico)</option>
+                <option value="Critical">Crítica (Tier 1 / Multiplica Risco x2.0)</option>
+                <option value="High">Alta (Produção / Multiplica Risco x1.5)</option>
+                <option value="Medium">Média (Apoio / Mantém Risco x1.0)</option>
+                <option value="Low">Baixa (Isolado / Reduz Risco x0.5)</option>
               </select>
             </div>
 
