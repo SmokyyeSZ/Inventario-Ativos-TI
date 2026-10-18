@@ -248,10 +248,17 @@ class DashboardMetricsAPI(APIView):
         vetor_x = [ativo.risco_final for ativo in ativos]
         nomes_ativos = [ativo.nome for ativo in ativos]
 
+        cves_ativas = (
+            Vulnerabilidade.objects.filter(equipamento__isnull=False)
+            .exclude(status__iexact='Corrigido')
+            .distinct()
+            .count()
+        )
+
         dados = {
             "total_assets": n,
             "lambda_max": float(lambda_max),
-            "unpatched_cves": Vulnerabilidade.objects.filter(status='Ativa').count(),
+            "unpatched_cves": cves_ativas,
             "matrix_density": float(densidade),
             "propagation_speed": 0.85,
             "heatmap": {

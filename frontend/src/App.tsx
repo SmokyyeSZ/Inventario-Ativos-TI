@@ -66,6 +66,8 @@ export const App: React.FC = () => {
         const targetId = keepSelectedId ?? selectedAsset?.id;
         const found = fetchedAssets.find((a) => String(a.id) === String(targetId));
         setSelectedAsset(found || fetchedAssets[0]);
+      } else {
+        setSelectedAsset(null as unknown as Asset);
       }
     } catch {
       setErrorMessage('Falha ao conectar com o servidor Django. Verifique se a API está online.');
