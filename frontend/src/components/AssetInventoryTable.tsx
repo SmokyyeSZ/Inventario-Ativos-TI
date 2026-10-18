@@ -201,6 +201,8 @@ export const AssetInventoryTable: React.FC<AssetInventoryTableProps> = ({
                           <span>{asset.ip}</span>
                           <span>·</span>
                           <span>{asset.cves.length} CVEs</span>
+                          <span>·</span>
+                          <span className="text-cyan-400">{asset.conexoes.length} Conexões</span>
                         </div>
                       </div>
                     </div>

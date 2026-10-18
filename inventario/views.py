@@ -148,6 +148,7 @@ class AdicionarConexaoAPI(APIView):
             porta = request.data.get('porta', 443)
             protocolo = request.data.get('protocolo', 'HTTPS')
             direcao = request.data.get('direcao', 'Bidirecional')
+            status_conn = request.data.get('status', 'Ativa')
 
             ConexaoRede.objects.update_or_create(
                 origem=origem,
@@ -157,6 +158,7 @@ class AdicionarConexaoAPI(APIView):
                     'porta': porta,
                     'protocolo': protocolo,
                     'direcao': direcao,
+                    'status': status_conn,
                 }
             )
 
@@ -276,6 +278,21 @@ class DashboardMetricsAPI(APIView):
         return Response(dados, status=status.HTTP_200_OK)
 
 class RemoverConexaoAPI(APIView):
+    def patch(self, request, pk, conexao_id):
+        try:
+            conexao = ConexaoRede.objects.get(id=conexao_id)
+            conexao.porta = request.data.get('porta', conexao.porta)
+            conexao.protocolo = request.data.get('protocolo', conexao.protocolo)
+            conexao.peso_propagacao = request.data.get('peso_propagacao', conexao.peso_propagacao)
+            conexao.direcao = request.data.get('direcao', conexao.direcao)
+            conexao.status = request.data.get('status', conexao.status)
+            conexao.save()
+
+            MotorMatematico().calcular_risco_rede()
+            return Response(status=status.HTTP_200_OK)
+        except ConexaoRede.DoesNotExist:
+            return Response({"erro": "Conexão não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
     def delete(self, request, pk, conexao_id):
         try:
             origem = Equipamento.objects.get(pk=pk)

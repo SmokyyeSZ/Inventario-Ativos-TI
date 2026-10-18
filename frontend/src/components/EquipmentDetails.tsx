@@ -26,6 +26,7 @@ interface EquipmentDetailsProps {
   onOpenConnect: () => void;
   onUnlinkCve: (cveId: string) => void;
   onAddConnection: (connection: NetworkConnection) => void;
+  onUpdateConnection: (connId: string, connection: Partial<NetworkConnection>) => void;
   onDeleteConnection: (connId: string) => void;
 }
 
@@ -38,22 +39,60 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
   onOpenConnect,
   onUnlinkCve,
   onAddConnection,
+  onUpdateConnection,
   onDeleteConnection,
 }) => {
   const otherAssets = allAssets.filter((a) => String(a.id) !== String(asset.id));
   const [showAddConn, setShowAddConn] = useState(false);
+  const [editingConnId, setEditingConnId] = useState<string | null>(null);
   const [targetAssetId, setTargetAssetId] = useState(otherAssets[0]?.id || '');
   const [port, setPort] = useState(443);
   const [protocol, setProtocol] = useState('HTTPS / TLS');
   const [weight, setWeight] = useState(0.5);
   const [direction, setDirection] = useState<NetworkConnection['direcao']>('Bidirecional');
+  const [connStatus, setConnStatus] = useState<NetworkConnection['status']>('Ativa');
 
   const selectedTargetId = otherAssets.some((a) => String(a.id) === String(targetAssetId))
     ? targetAssetId
     : otherAssets[0]?.id || '';
 
+  const handleOpenNewConn = () => {
+    setEditingConnId(null);
+    setTargetAssetId(otherAssets[0]?.id || '');
+    setPort(443);
+    setProtocol('HTTPS / TLS');
+    setWeight(0.5);
+    setDirection('Bidirecional');
+    setConnStatus('Ativa');
+    setShowAddConn(!showAddConn);
+  };
+
+  const handleStartEditConn = (conn: NetworkConnection) => {
+    setEditingConnId(conn.id);
+    setTargetAssetId(conn.destinoId);
+    setPort(conn.porta);
+    setProtocol(conn.protocolo);
+    setWeight(conn.pesoPropagacao);
+    setDirection(conn.direcao);
+    setConnStatus(conn.status || 'Ativa');
+    setShowAddConn(true);
+  };
+
   const handleCreateConnection = (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingConnId) {
+      onUpdateConnection(editingConnId, {
+        porta: Number(port),
+        protocolo,
+        pesoPropagacao: Number(weight),
+        direcao: direction,
+        status: connStatus,
+      });
+      setEditingConnId(null);
+      setShowAddConn(false);
+      return;
+    }
+
     const targetAsset = otherAssets.find((a) => String(a.id) === String(selectedTargetId));
     if (!targetAsset) return;
 
@@ -66,7 +105,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
       protocolo: protocol,
       pesoPropagacao: Number(weight),
       direcao: direction,
-      status: 'Ativa',
+      status: connStatus,
     };
 
     onAddConnection(newConn);
@@ -178,7 +217,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
             <select
               value={asset.id}
               onChange={(e) => {
-                const target = allAssets.find((a) => a.id === e.target.value);
+                const target = allAssets.find((a) => String(a.id) === String(e.target.value));
                 if (target) onSelectAnotherAsset(target);
               }}
               className="px-2.5 py-1 bg-[#05080f] border border-slate-700 rounded text-xs text-slate-200 font-mono focus:outline-none focus:border-rose-500 cursor-pointer"
@@ -282,7 +321,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
             </div>
 
             <button
-              onClick={() => setShowAddConn(!showAddConn)}
+              onClick={handleOpenNewConn}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800 text-xs font-semibold font-mono transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -292,14 +331,17 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
 
           {showAddConn && (
             <form onSubmit={handleCreateConnection} className="p-3.5 mb-4 bg-[#05080f] border border-cyan-500/40 rounded-lg space-y-3">
-              <h3 className="text-xs font-mono font-bold text-cyan-300">Criar Conexão de Rede Lateral</h3>
+              <h3 className="text-xs font-mono font-bold text-cyan-300">
+                {editingConnId ? 'Editar Conexão de Rede' : 'Criar Conexão de Rede Lateral'}
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-mono text-slate-400 mb-1">Destino</label>
                   <select
                     value={selectedTargetId}
+                    disabled={Boolean(editingConnId)}
                     onChange={(e) => setTargetAssetId(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-[#0a1120] border border-slate-700 rounded text-xs font-mono text-slate-200"
+                    className="w-full px-2.5 py-1.5 bg-[#0a1120] border border-slate-700 rounded text-xs font-mono text-slate-200 disabled:opacity-60"
                   >
                     {otherAssets.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -335,13 +377,12 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                 <div>
                   <label className="block text-[11px] font-mono text-slate-400 mb-1">
                     Peso de Propagação: <span className="text-rose-400 font-bold tabular-nums">{weight.toFixed(2)}</span>
-                    
                   </label>
                   <input
                     type="range"
                     min="0.1"
-                    max="0.6"
-                    step="0.1"
+                    max="0.9"
+                    step="0.05"
                     value={weight}
                     onChange={(e) => setWeight(parseFloat(e.target.value))}
                     className="w-full accent-rose-500"
@@ -349,19 +390,50 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1">Direção do Tráfego</label>
+                  <select
+                    value={direction}
+                    onChange={(e) => setDirection(e.target.value as NetworkConnection['direcao'])}
+                    className="w-full px-2.5 py-1.5 bg-[#0a1120] border border-slate-700 rounded text-xs font-mono text-slate-200"
+                  >
+                    <option value="Bidirecional">Bidirecional (↔ Ambos os sentidos)</option>
+                    <option value="Outbound">Outbound (→ Sai deste ativo)</option>
+                    <option value="Inbound">Inbound (← Entra neste ativo)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1">Status da Conexão</label>
+                  <select
+                    value={connStatus}
+                    onChange={(e) => setConnStatus(e.target.value as NetworkConnection['status'])}
+                    className="w-full px-2.5 py-1.5 bg-[#0a1120] border border-slate-700 rounded text-xs font-mono text-slate-200"
+                  >
+                    <option value="Ativa">Ativa (Propaga risco)</option>
+                    <option value="Monitorada">Monitorada (Sob observação)</option>
+                    <option value="Bloqueada">Bloqueada (Isolada pelo Firewall)</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddConn(false)}
-                  className="px-3 py-1 text-xs text-slate-400 hover:text-white"
+                  onClick={() => {
+                    setEditingConnId(null);
+                    setShowAddConn(false);
+                  }}
+                  className="px-3 py-1 text-xs text-slate-400 hover:text-white cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded"
+                  className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded cursor-pointer"
                 >
-                  Salvar Conexão
+                  {editingConnId ? 'Atualizar Conexão' : 'Salvar Conexão'}
                 </button>
               </div>
             </form>
@@ -380,7 +452,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                   className="p-3.5 rounded-lg bg-[#05080f] border border-slate-800 hover:border-cyan-500/40 transition-colors"
                 >
                   <div className="flex items-center justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-xs font-bold text-white">{conn.destinoNome}</span>
                       <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/80 px-2 py-0.5 rounded">
                         Porta {conn.porta}
@@ -388,15 +460,34 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                       <span className="text-xs text-slate-400 font-mono">
                         {conn.protocolo}
                       </span>
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                        conn.status === 'Bloqueada'
+                          ? 'bg-rose-950/60 text-rose-400 border-rose-800/80'
+                          : conn.status === 'Monitorada'
+                          ? 'bg-amber-950/60 text-amber-400 border-amber-800/80'
+                          : 'bg-emerald-950/60 text-emerald-400 border-emerald-800/80'
+                      }`}>
+                        {conn.status || 'Ativa'}
+                      </span>
                     </div>
 
-                    <button
-                      onClick={() => onDeleteConnection(conn.id)}
-                      title="Excluir Conexão"
-                      className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleStartEditConn(conn)}
+                        title="Editar Conexão"
+                        className="p-1 text-slate-400 hover:text-cyan-400 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => onDeleteConnection(conn.id)}
+                        title="Excluir Conexão"
+                        className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-800/80">

@@ -177,7 +177,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <p className="text-[11px] text-slate-400 truncate mb-1">{asset.departamento}</p>
               <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
                 <span>{asset.ip}</span>
-                <span>{asset.cves.length} CVEs</span>
+                <span>{asset.cves.length} CVEs · {asset.conexoes.length} Conexões</span>
               </div>
             </div>
           ))}
