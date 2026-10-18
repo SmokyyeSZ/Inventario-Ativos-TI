@@ -410,6 +410,10 @@ export async function updateAssetOnServer(id: string, updated: Partial<Asset>): 
   }
 }
 
+export async function deleteAssetOnServer(id: string): Promise<void> {
+  await apiClient.delete(`equipamentos/${id}/`);
+}
+
 export async function linkCveToAssetOnServer(assetId: string, cve: CveItem): Promise<Asset> {
   const res = await apiClient.post<Asset>(`equipamentos/${assetId}/cves/`, cve);
   return res.data;

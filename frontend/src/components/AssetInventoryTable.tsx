@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, Edit2, Terminal, Eye, AlertTriangle, ShieldCheck, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, Plus, Edit2, Terminal, Eye, AlertTriangle, ShieldCheck, ArrowUpDown, Trash2 } from 'lucide-react';
 import { Asset } from '../types';
 
 interface AssetInventoryTableProps {
@@ -7,6 +7,7 @@ interface AssetInventoryTableProps {
   onSelectAsset: (asset: Asset) => void;
   onEditAsset: (asset: Asset) => void;
   onConnectAsset: (asset: Asset) => void;
+  onDeleteAsset: (asset: Asset) => void;
   onOpenAddModal: () => void;
 }
 
@@ -15,6 +16,7 @@ export const AssetInventoryTable: React.FC<AssetInventoryTableProps> = ({
   onSelectAsset,
   onEditAsset,
   onConnectAsset,
+  onDeleteAsset,
   onOpenAddModal,
 }) => {
   const [search, setSearch] = useState('');
@@ -238,6 +240,14 @@ export const AssetInventoryTable: React.FC<AssetInventoryTableProps> = ({
                         className="p-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800 transition-colors cursor-pointer"
                       >
                         <Terminal className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => onDeleteAsset(asset)}
+                        title="Apagar Ativo do Inventário"
+                        className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 text-rose-400 border border-rose-800/80 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>

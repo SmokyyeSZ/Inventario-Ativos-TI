@@ -12,6 +12,7 @@ import {
   fetchDashboardMetrics,
   fetchAssets,
   updateAssetOnServer,
+  deleteAssetOnServer,
   linkCveToAssetOnServer,
   unlinkCveOnServer,
   addConnectionOnServer,
@@ -81,6 +82,12 @@ export const App: React.FC = () => {
   const handleSaveAsset = async (updatedFields: Partial<Asset>) => {
     await updateAssetOnServer(selectedAsset.id, updatedFields);
     await loadData(selectedAsset.id);
+  };
+
+  const handleDeleteAsset = async (asset: Asset) => {
+    if (!window.confirm(`Tem certeza que deseja apagar o ativo "${asset.nome}"?`)) return;
+    await deleteAssetOnServer(asset.id);
+    await loadData();
   };
 
   const handleLinkCve = async (cve: CveItem) => {
@@ -164,6 +171,7 @@ export const App: React.FC = () => {
                 setSelectedAsset(asset);
                 setIsConnectModalOpen(true);
               }}
+              onDeleteAsset={handleDeleteAsset}
               onOpenAddModal={() => setIsAddAssetModalOpen(true)}
             />
           )}
