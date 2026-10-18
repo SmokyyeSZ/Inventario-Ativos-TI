@@ -45,11 +45,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {metrics.totalAssets.toLocaleString('pt-BR')}
             </span>
             <span className="text-xs font-mono text-emerald-400 flex items-center">
-              <ArrowUpRight className="w-3.5 h-3.5" /> +12%
+              {metrics.totalAssets > 0 ? 'Ativos' : 'Vazio'}
             </span>
           </div>
           <div className="mt-3 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-cyan-500 w-[78%] rounded-full"></div>
+            <div
+              className="h-full bg-cyan-500 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(metrics.totalAssets * 10, 100)}%` }}
+            ></div>
           </div>
         </div>
 
@@ -67,7 +70,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
           <div className="mt-3 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-amber-500 w-[62%] rounded-full"></div>
+            <div
+              className="h-full bg-amber-500 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(metrics.lambdaMax * 100, 100)}%` }}
+            ></div>
           </div>
         </div>
 
@@ -81,11 +87,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {metrics.unpatchedCves}
             </span>
             <span className="text-xs font-mono text-rose-400 flex items-center">
-              Crítico
+              {metrics.unpatchedCves > 0 ? 'Crítico' : 'Seguro'}
             </span>
           </div>
           <div className="mt-3 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-rose-500 w-[84%] rounded-full"></div>
+            <div
+              className="h-full bg-rose-500 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(metrics.unpatchedCves * 10, 100)}%` }}
+            ></div>
           </div>
         </div>
 
@@ -103,7 +112,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
           <div className="mt-3 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-cyan-400 w-[45%] rounded-full"></div>
+            <div
+              className="h-full bg-cyan-400 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(metrics.matrixDensity * 100, 100)}%` }}
+            ></div>
           </div>
         </div>
       </div>
