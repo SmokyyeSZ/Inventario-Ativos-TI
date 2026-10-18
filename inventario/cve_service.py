@@ -2,7 +2,7 @@ import requests
 from inventario.models import Vulnerabilidade
 
 class CVEService:
-    def buscar_e_salvar_cve(self, cve_id):
+    def buscar_e_salvar_cve(self, cve_id, dados_fallback=None):
         url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_id}"
 
         try:
@@ -45,4 +45,22 @@ class CVEService:
                     return vuln
         except Exception as e:
             print(f"Erro ao buscar CVE: {e}")
+
+        if dados_fallback:
+            vuln, criada = Vulnerabilidade.objects.get_or_create(
+                cve_code=cve_id,
+                defaults={
+                    'descricao': dados_fallback.get('descricao', 'Vulnerabilidade registrada manualmente.'),
+                    'categoria': 'Cibersegurança',
+                    'severidade': dados_fallback.get('severidade', 'High'),
+                    'status': dados_fallback.get('status', 'Ativa'),
+                    'score': dados_fallback.get('cvss', 0.0),
+                    'vetor_ataque': dados_fallback.get('vetor_ataque', 'Network / Unauthenticated'),
+                    'data_descoberta': dados_fallback.get('data_descoberta', ''),
+                }
+            )
+            if criada:
+                print(f"⚠️ CVE Manual {cve_id} salva via fallback do formulário!")
+            return vuln
+
         return None

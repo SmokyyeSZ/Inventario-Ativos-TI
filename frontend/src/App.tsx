@@ -51,7 +51,7 @@ export const App: React.FC = () => {
     loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (keepSelectedId?: string) => {
     setIsRefreshing(true);
     setErrorMessage('');
     try {
@@ -62,7 +62,9 @@ export const App: React.FC = () => {
       setMetrics(fetchedMetrics);
       setAssets(fetchedAssets);
       if (fetchedAssets.length > 0) {
-        setSelectedAsset(fetchedAssets[0]);
+        const targetId = keepSelectedId ?? selectedAsset?.id;
+        const found = fetchedAssets.find((a) => String(a.id) === String(targetId));
+        setSelectedAsset(found || fetchedAssets[0]);
       }
     } catch {
       setErrorMessage('Falha ao conectar com o servidor Django. Verifique se a API está online.');
@@ -77,43 +79,33 @@ export const App: React.FC = () => {
   };
 
   const handleSaveAsset = async (updatedFields: Partial<Asset>) => {
-    const updated = await updateAssetOnServer(selectedAsset.id, updatedFields);
-    setAssets((prev) => prev.map((a) => (a.id === selectedAsset.id ? { ...a, ...updated } : a)));
-    setSelectedAsset((prev) => ({ ...prev, ...updated }));
+    await updateAssetOnServer(selectedAsset.id, updatedFields);
+    await loadData(selectedAsset.id);
   };
 
   const handleLinkCve = async (cve: CveItem) => {
-    const updated = await linkCveToAssetOnServer(selectedAsset.id, cve);
-    setAssets((prev) => prev.map((a) => (a.id === selectedAsset.id ? updated : a)));
-    setSelectedAsset(updated);
+    await linkCveToAssetOnServer(selectedAsset.id, cve);
+    await loadData(selectedAsset.id);
   };
 
   const handleUnlinkCve = async (cveId: string) => {
     await unlinkCveOnServer(selectedAsset.id, cveId);
-    const updatedCves = selectedAsset.cves.filter((c) => c.id !== cveId);
-    const updatedAsset = { ...selectedAsset, cves: updatedCves };
-    setAssets((prev) => prev.map((a) => (a.id === selectedAsset.id ? updatedAsset : a)));
-    setSelectedAsset(updatedAsset);
+    await loadData(selectedAsset.id);
   };
 
   const handleAddConnection = async (conn: NetworkConnection) => {
-    const updated = await addConnectionOnServer(selectedAsset.id, conn);
-    setAssets((prev) => prev.map((a) => (a.id === selectedAsset.id ? updated : a)));
-    setSelectedAsset(updated);
+    await addConnectionOnServer(selectedAsset.id, conn);
+    await loadData(selectedAsset.id);
   };
 
   const handleDeleteConnection = async (connId: string) => {
     await deleteConnectionOnServer(selectedAsset.id, connId);
-    const updatedConns = selectedAsset.conexoes.filter((c) => c.id !== connId);
-    const updatedAsset = { ...selectedAsset, conexoes: updatedConns };
-    setAssets((prev) => prev.map((a) => (a.id === selectedAsset.id ? updatedAsset : a)));
-    setSelectedAsset(updatedAsset);
+    await loadData(selectedAsset.id);
   };
 
   const handleAddAsset = async (newAsset: Asset) => {
     const created = await createAssetOnServer(newAsset);
-    setAssets((prev) => [created, ...prev]);
-    setSelectedAsset(created);
+    await loadData(created.id);
   };
 
   return (
@@ -122,7 +114,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenApiConfig={() => setIsApiConfigModalOpen(true)}
-        onRefreshData={loadData}
+        onRefreshData={() => loadData()}
         isRefreshing={isRefreshing}
         selectedAssetNome={selectedAsset?.nome}
       />
@@ -138,7 +130,7 @@ export const App: React.FC = () => {
           <h2 className="text-xl font-bold font-mono text-white mb-2">Conexão com o Servidor Perdida</h2>
           <p className="text-sm font-mono text-rose-400 mb-6">{errorMessage}</p>
           <button 
-            onClick={loadData}
+            onClick={() => loadData()}
             className="px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold font-mono text-xs rounded-lg transition-colors cursor-pointer"
           >
             Tentar Reconectar
