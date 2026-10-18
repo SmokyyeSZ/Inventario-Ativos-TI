@@ -26,6 +26,8 @@ import { LinkCveModal } from './components/LinkCveModal';
 import { ConnectTerminalModal } from './components/ConnectTerminalModal';
 import { AddAssetModal } from './components/AddAssetModal';
 import { ApiConfigModal } from './components/ApiConfigModal';
+import { createAssetOnServer } from './services/api';
+import { updateApiBaseUrl } from './services/api';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
@@ -37,6 +39,7 @@ export const App: React.FC = () => {
     import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLinkCveModalOpen, setIsLinkCveModalOpen] = useState(false);
@@ -50,6 +53,7 @@ export const App: React.FC = () => {
 
   const loadData = async () => {
     setIsRefreshing(true);
+    setErrorMessage('');
     try {
       const [fetchedMetrics, fetchedAssets] = await Promise.all([
         fetchDashboardMetrics(),
@@ -61,8 +65,7 @@ export const App: React.FC = () => {
         setSelectedAsset(fetchedAssets[0]);
       }
     } catch {
-      setMetrics(initialMetrics);
-      setAssets(initialAssets);
+      setErrorMessage('Falha ao conectar com o servidor Django. Verifique se a API está online.');
     } finally {
       setIsRefreshing(false);
     }
@@ -107,9 +110,10 @@ export const App: React.FC = () => {
     setSelectedAsset(updatedAsset);
   };
 
-  const handleAddAsset = (newAsset: Asset) => {
-    setAssets((prev) => [newAsset, ...prev]);
-    setSelectedAsset(newAsset);
+  const handleAddAsset = async (newAsset: Asset) => {
+    const created = await createAssetOnServer(newAsset);
+    setAssets((prev) => [created, ...prev]);
+    setSelectedAsset(created);
   };
 
   return (
@@ -123,48 +127,70 @@ export const App: React.FC = () => {
         selectedAssetNome={selectedAsset?.nome}
       />
 
-      <main className="flex-1 max-w-[1720px] w-full mx-auto p-4 lg:p-8">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            metrics={metrics}
-            assets={assets}
-            onSelectAsset={handleSelectAsset}
-            selectedAssetId={selectedAsset?.id}
-            propagationSpeed={propagationSpeed}
-            onPropagationSpeedChange={setPropagationSpeed}
-            onGoToInventory={() => setActiveTab('inventory')}
-          />
-        )}
 
-        {activeTab === 'inventory' && (
-          <AssetInventoryTable
-            assets={assets}
-            onSelectAsset={handleSelectAsset}
-            onEditAsset={(asset) => {
-              setSelectedAsset(asset);
-              setIsEditModalOpen(true);
-            }}
-            onConnectAsset={(asset) => {
-              setSelectedAsset(asset);
-              setIsConnectModalOpen(true);
-            }}
-            onOpenAddModal={() => setIsAddAssetModalOpen(true)}
-          />
-        )}
+    <main className="flex-1 max-w-[1720px] w-full mx-auto p-4 lg:p-8">
+      {errorMessage ? (
+        
+        <div className="flex flex-col items-center justify-center p-12 border border-rose-500/40 bg-[#0b101b] rounded-xl shadow-[0_0_30px_rgba(239,68,68,0.15)] text-center min-h-[50vh]">
+          <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mb-4 border border-rose-500/50">
+            <span className="text-rose-500 text-3xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-bold font-mono text-white mb-2">Conexão com o Servidor Perdida</h2>
+          <p className="text-sm font-mono text-rose-400 mb-6">{errorMessage}</p>
+          <button 
+            onClick={loadData}
+            className="px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold font-mono text-xs rounded-lg transition-colors cursor-pointer"
+          >
+            Tentar Reconectar
+          </button>
+        </div>
 
-        {activeTab === 'details' && selectedAsset && (
-          <EquipmentDetails
-            asset={selectedAsset}
-            allAssets={assets}
-            onSelectAnotherAsset={setSelectedAsset}
-            onOpenEdit={() => setIsEditModalOpen(true)}
-            onOpenLinkCve={() => setIsLinkCveModalOpen(true)}
-            onOpenConnect={() => setIsConnectModalOpen(true)}
-            onUnlinkCve={handleUnlinkCve}
-            onAddConnection={handleAddConnection}
-            onDeleteConnection={handleDeleteConnection}
-          />
-        )}
+      ) : (
+        
+        <>
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              metrics={metrics}
+              assets={assets}
+              onSelectAsset={handleSelectAsset}
+              selectedAssetId={selectedAsset?.id}
+              propagationSpeed={propagationSpeed}
+              onPropagationSpeedChange={setPropagationSpeed}
+              onGoToInventory={() => setActiveTab('inventory')}
+            />
+          )}
+
+          {activeTab === 'inventory' && (
+            <AssetInventoryTable
+              assets={assets}
+              onSelectAsset={handleSelectAsset}
+              onEditAsset={(asset) => {
+                setSelectedAsset(asset);
+                setIsEditModalOpen(true);
+              }}
+              onConnectAsset={(asset) => {
+                setSelectedAsset(asset);
+                setIsConnectModalOpen(true);
+              }}
+              onOpenAddModal={() => setIsAddAssetModalOpen(true)}
+            />
+          )}
+
+          {activeTab === 'details' && selectedAsset && (
+            <EquipmentDetails
+              asset={selectedAsset}
+              allAssets={assets}
+              onSelectAnotherAsset={setSelectedAsset}
+              onOpenEdit={() => setIsEditModalOpen(true)}
+              onOpenLinkCve={() => setIsLinkCveModalOpen(true)}
+              onOpenConnect={() => setIsConnectModalOpen(true)}
+              onUnlinkCve={handleUnlinkCve}
+              onAddConnection={handleAddConnection}
+              onDeleteConnection={handleDeleteConnection}
+            />
+          )}
+        </>
+      )}
       </main>
 
       <footer className="border-t border-slate-900 bg-[#05080e] px-4 lg:px-8 py-4 text-xs font-mono text-slate-500">
@@ -216,7 +242,11 @@ export const App: React.FC = () => {
         isOpen={isApiConfigModalOpen}
         onClose={() => setIsApiConfigModalOpen(false)}
         currentUrl={apiUrl}
-        onSaveUrl={(newUrl) => setApiUrl(newUrl)}
+        onSaveUrl={(newUrl) => {
+          updateApiBaseUrl(newUrl)
+          setApiUrl(newUrl)
+        }
+        }
       />
     </div>
   );

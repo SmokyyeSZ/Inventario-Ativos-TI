@@ -13,6 +13,7 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
   const [departamento, setDepartamento] = useState('Infraestrutura Cloud');
   const [ip, setIp] = useState('10.100.');
   const [tipo, setTipo] = useState<Asset['tipo']>('Internal Server');
+  const [responsavel,setResponsavel] = useState('');
   const [criticidade, setCriticidade] = useState<SeverityLevel>('High');
   const [sistemaOperacional, setSistemaOperacional] = useState('Ubuntu Linux 24.04 LTS');
 
@@ -22,8 +23,6 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
     e.preventDefault();
     if (!nome.trim() || !ip.trim()) return;
 
-    const baseRisk = criticidade === 'Critical' ? 9.1 : criticidade === 'High' ? 7.5 : criticidade === 'Medium' ? 4.8 : 2.2;
-
     const newAsset: Asset = {
       id: `ast-${Date.now().toString().slice(-4)}`,
       nome: nome.trim().toUpperCase(),
@@ -31,9 +30,10 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
       ip: ip.trim(),
       mac: '00:1A:2B:' + Math.floor(10 + Math.random() * 89) + ':' + Math.floor(10 + Math.random() * 89) + ':' + Math.floor(10 + Math.random() * 89),
       tipo,
+      responsavel,
       criticidade,
-      riscoFinal: baseRisk,
-      pesoPropagacao: baseRisk / 12,
+      riscoFinal: 0.0,
+      pesoPropagacao: 0.0,
       status: 'online',
       ultimoScan: 'Agora mesmo',
       sistemaOperacional,
@@ -88,6 +88,17 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
             </div>
 
             <div>
+              <label className='block text-xs font-mono text-slate-400 mb-1.5'>Responsavel</label>
+              <input
+                type="text"
+                required
+                value={responsavel}
+                onChange={(e) => setResponsavel(e.target.value)}
+                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div>
               <label className="block text-xs font-mono text-slate-400 mb-1.5">Endereço IP</label>
               <input
                 type="text"
@@ -123,10 +134,10 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
                 onChange={(e) => setCriticidade(e.target.value as SeverityLevel)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
               >
-                <option value="Critical">Crítica (Score ~9.1)</option>
-                <option value="High">Alta (Score ~7.5)</option>
-                <option value="Medium">Média (Score ~4.8)</option>
-                <option value="Low">Baixa (Score ~2.2)</option>
+                <option value="Critical">Crítica (Tier 1 / Multiplica Risco x2.0)</option>
+                <option value="High">Alta (Produção / Multiplica Risco x1.5)</option>
+                <option value="Medium">Média (Apoio / Mantém Risco x1.0)</option>
+                <option value="Low">Baixa (Isolado / Reduz Risco x0.5)</option>
               </select>
             </div>
           </div>

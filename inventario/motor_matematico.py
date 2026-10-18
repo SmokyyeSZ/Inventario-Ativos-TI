@@ -1,13 +1,13 @@
 import numpy as np
-from .models import Equipamento
+from .models import Equipamento, ConexaoRede
 
 class MotorMatematico:
     def __init__(self):
         self.fatores_exposicao = {
-            'SERVIDOR':1.5,
-            'BANCO_DE_DADOS': 1.5,
-            'NOTEBOOK': 1.0,
-            'ROTEADORES': 1.0
+            'CRITICAL':2.0,
+            'HIGH': 1.5,
+            'MEDIUM': 1.0,
+            'LOW': 0.5
         }
 
     def calcular_risco_rede(self):
@@ -20,23 +20,23 @@ class MotorMatematico:
         matriz_A = np.zeros((n,n))
         vetor_b = np.zeros(n)
 
-        id_para_indice = {ativo.id_ativo: indice for indice, ativo in enumerate(ativos)}
+        id_para_indice = {ativo.id: indice for indice, ativo in enumerate(ativos)}
 
         for i, ativo in enumerate(ativos):
             #--- CÁLCULO DO VETOR B (Risco proprio) ---#
             score_total = sum(vuln.score for vuln in ativo.vulnerabilidades.all())
 
-            expo = self.fatores_exposicao.get(ativo.tipo.upper(), 1.0)
+            expo = self.fatores_exposicao.get(ativo.criticidade.upper(), 1.0)
 
             risco_proprio = score_total * expo
             vetor_b[i] = risco_proprio
 
             #--- CÁLCULO DA MATRIZ A (Conexões) ---#
 
-            for conexao in ativo.conexoes.all():
-                if conexao.id_ativo in id_para_indice:
-                    j = id_para_indice[conexao.id_ativo]
-                    matriz_A[i][j] = 1
+            for conexao in ativo.conexoes_origem.all():
+                if conexao.destino.id in id_para_indice:
+                    j = id_para_indice[conexao.destino.id]
+                    matriz_A[i][j] = conexao.peso_propagacao
 
         mi = np.eye(n)
         det = np.linalg.det(mi - matriz_A)
@@ -50,6 +50,7 @@ class MotorMatematico:
         for i, ativo in enumerate(ativos):
             ativo.risco_proprio = round(float(vetor_b[i]), 2)
             ativo.risco_final = round(float(solve[i]), 2)
+            ativo.peso_propagacao = round(float(np.max(matriz_A[i])) if np.any(matriz_A[i] > 0) else 0.0, 2)
             ativo.save()
 
         return True

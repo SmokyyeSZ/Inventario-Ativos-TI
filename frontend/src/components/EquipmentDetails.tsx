@@ -332,12 +332,13 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                 <div>
                   <label className="block text-[11px] font-mono text-slate-400 mb-1">
                     Peso de Propagação: <span className="text-rose-400 font-bold tabular-nums">{weight.toFixed(2)}</span>
+                    
                   </label>
                   <input
                     type="range"
-                    min="0.05"
-                    max="1.0"
-                    step="0.05"
+                    min="0.1"
+                    max="0.6"
+                    step="0.1"
                     value={weight}
                     onChange={(e) => setWeight(parseFloat(e.target.value))}
                     className="w-full accent-rose-500"
