@@ -83,7 +83,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
     if (editingConnId) {
       onUpdateConnection(editingConnId, {
         porta: Number(port),
-        protocolo,
+        protocolo: protocol,
         pesoPropagacao: Number(weight),
         direcao: direction,
         status: connStatus,

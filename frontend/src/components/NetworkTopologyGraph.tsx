@@ -234,7 +234,7 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
                 key={node.id}
                 transform={`translate(${node.x}, ${node.y})`}
                 onClick={() => handleNodeClick(node.id)}
-                className="cursor-pointer transition-transform hover:scale-110"
+                className="cursor-pointer group"
               >
                 {isHighRisk && (
                   <circle
@@ -243,7 +243,8 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
                     stroke="#ef4444"
                     strokeWidth="1.5"
                     strokeOpacity="0.4"
-                    className="animate-ping"
+                    className="animate-ping pointer-events-none"
+                    style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
                   />
                 )}
 
@@ -252,6 +253,7 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
                   fill={colors.fill}
                   stroke={isSelected ? '#ffffff' : colors.stroke}
                   strokeWidth={isSelected ? 3 : 2}
+                  className="transition-all duration-150 group-hover:stroke-white group-hover:stroke-[3px]"
                   style={{
                     filter: `drop-shadow(0 0 10px ${colors.glow})`,
                   }}
