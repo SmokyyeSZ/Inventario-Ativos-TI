@@ -66,14 +66,22 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
     };
   });
 
-  const links: GraphLink[] = assets.flatMap((asset) =>
-    (asset.conexoes || []).map((conn) => ({
-      source: String(conn.origemId ?? asset.id),
-      target: String(conn.destinoId),
-      weight: Number(conn.pesoPropagacao ?? 0.1),
-      riskFlow: Number(asset.riscoFinal ?? 0) >= 7.0 || Number(conn.pesoPropagacao ?? 0) >= 0.5,
-    }))
-  );
+  const seenConnIds = new Set<string>();
+  const links: GraphLink[] = [];
+  for (const asset of assets) {
+    for (const conn of asset.conexoes || []) {
+      const connKey = String(conn.id || `${conn.origemId}-${conn.destinoId}`);
+      if (seenConnIds.has(connKey)) continue;
+      seenConnIds.add(connKey);
+      if (conn.status === 'Bloqueada') continue;
+      links.push({
+        source: String(conn.origemId ?? asset.id),
+        target: String(conn.destinoId),
+        weight: Number(conn.pesoPropagacao ?? 0.1),
+        riskFlow: Number(asset.riscoFinal ?? 0) >= 7.0 || Number(conn.pesoPropagacao ?? 0) >= 0.5,
+      });
+    }
+  }
 
   const filteredNodes = nodes.filter((n) =>
     n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

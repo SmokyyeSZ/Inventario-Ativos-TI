@@ -437,6 +437,10 @@ export async function addConnectionOnServer(assetId: string, connection: Network
   }
 }
 
+export async function updateConnectionOnServer(assetId: string, connectionId: string, connection: Partial<NetworkConnection>): Promise<void> {
+  await apiClient.patch(`equipamentos/${assetId}/connections/${connectionId}/`, connection);
+}
+
 export async function deleteConnectionOnServer(assetId: string, connectionId: string): Promise<void> {
   try {
     await apiClient.delete(`equipamentos/${assetId}/connections/${connectionId}/`);

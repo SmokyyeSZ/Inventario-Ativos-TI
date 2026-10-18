@@ -16,6 +16,7 @@ import {
   linkCveToAssetOnServer,
   unlinkCveOnServer,
   addConnectionOnServer,
+  updateConnectionOnServer,
   deleteConnectionOnServer
 } from './services/api';
 import { Navbar } from './components/Navbar';
@@ -107,6 +108,11 @@ export const App: React.FC = () => {
     await loadData(selectedAsset.id);
   };
 
+  const handleUpdateConnection = async (connId: string, updated: Partial<NetworkConnection>) => {
+    await updateConnectionOnServer(selectedAsset.id, connId, updated);
+    await loadData(selectedAsset.id);
+  };
+
   const handleDeleteConnection = async (connId: string) => {
     await deleteConnectionOnServer(selectedAsset.id, connId);
     await loadData(selectedAsset.id);
@@ -188,6 +194,7 @@ export const App: React.FC = () => {
               onOpenConnect={() => setIsConnectModalOpen(true)}
               onUnlinkCve={handleUnlinkCve}
               onAddConnection={handleAddConnection}
+              onUpdateConnection={handleUpdateConnection}
               onDeleteConnection={handleDeleteConnection}
             />
           )}
