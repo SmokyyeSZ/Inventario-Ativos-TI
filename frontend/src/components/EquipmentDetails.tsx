@@ -48,7 +48,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
   const [targetAssetId, setTargetAssetId] = useState(otherAssets[0]?.id || '');
   const [port, setPort] = useState(443);
   const [protocol, setProtocol] = useState('HTTPS / TLS');
-  const [weight, setWeight] = useState(0.5);
+  const [weight, setWeight] = useState(0.3);
   const [direction, setDirection] = useState<NetworkConnection['direcao']>('Bidirecional');
   const [connStatus, setConnStatus] = useState<NetworkConnection['status']>('Ativa');
 
@@ -61,7 +61,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
     setTargetAssetId(otherAssets[0]?.id || '');
     setPort(443);
     setProtocol('HTTPS / TLS');
-    setWeight(0.5);
+    setWeight(0.3);
     setDirection('Bidirecional');
     setConnStatus('Ativa');
     setShowAddConn(!showAddConn);
@@ -380,8 +380,8 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                   </label>
                   <input
                     type="range"
-                    min="0.1"
-                    max="0.9"
+                    min="0.05"
+                    max="0.6"
                     step="0.05"
                     value={weight}
                     onChange={(e) => setWeight(parseFloat(e.target.value))}
