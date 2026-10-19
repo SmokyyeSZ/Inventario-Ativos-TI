@@ -10,10 +10,10 @@ interface RiskHeatmapMatrixProps {
 
 export const RiskHeatmapMatrix: React.FC<RiskHeatmapMatrixProps> = ({ metrics, assets, onSelectAsset }) => {
   const getCellBg = (val: number) => {
-    if (val >= 6.0) return 'bg-rose-600/90 text-white font-bold border-rose-400';
-    if (val >= 3.0) return 'bg-amber-600/80 text-white font-semibold border-amber-400';
-    if (val >= 1.0) return 'bg-emerald-600/70 text-white font-medium border-emerald-400';
-    if (val >= 0.4) return 'bg-cyan-700/60 text-slate-100 border-cyan-500';
+    if (val >= 0.5) return 'bg-rose-600/90 text-white font-bold border-rose-400';
+    if (val >= 0.35) return 'bg-amber-600/80 text-white font-semibold border-amber-400';
+    if (val >= 0.2) return 'bg-emerald-600/70 text-white font-medium border-emerald-400';
+    if (val > 0.0) return 'bg-cyan-700/60 text-slate-100 border-cyan-500';
     return 'bg-blue-900/40 text-slate-300 border-blue-700';
   };
 
@@ -77,7 +77,7 @@ export const RiskHeatmapMatrix: React.FC<RiskHeatmapMatrixProps> = ({ metrics, a
           <div className="flex items-center gap-1.5">
             <span className="text-blue-400">0.00</span>
             <div className="w-24 h-2.5 rounded-full bg-gradient-to-r from-blue-700 via-emerald-600 via-amber-500 to-rose-600"></div>
-            <span className="text-rose-400 font-bold">10.00</span>
+            <span className="text-rose-400 font-bold">0.60</span>
           </div>
         </div>
       </div>
