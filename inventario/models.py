@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class ConexaoRede(models.Model):
     origem = models.ForeignKey('Equipamento', related_name='conexoes_origem', on_delete=models.CASCADE)
@@ -26,7 +26,7 @@ class Vulnerabilidade(models.Model):
 
 class Equipamento(models.Model):
     nome = models.CharField(max_length=100)
-    responsavel = models.CharField(max_length=100)
+    responsavel = models.ForeignKey(User,related_name='responsavel',on_delete=models.SET_NULL, null=True, blank=True)
     departamento = models.CharField(max_length=100)
     tipo = models.CharField(max_length=100)
     vulnerabilidades = models.ManyToManyField(Vulnerabilidade, blank=True)

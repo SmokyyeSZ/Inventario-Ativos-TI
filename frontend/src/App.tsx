@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { LoginView } from './components/LoginView';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import {
   ActiveTab,
   Asset,
@@ -7,7 +9,6 @@ import {
   RiskPropagationMetrics
 } from './types';
 import {
-  initialAssets,
   initialMetrics,
   fetchDashboardMetrics,
   fetchAssets,
@@ -30,12 +31,14 @@ import { AddAssetModal } from './components/AddAssetModal';
 import { ApiConfigModal } from './components/ApiConfigModal';
 import { createAssetOnServer } from './services/api';
 import { updateApiBaseUrl } from './services/api';
+import { div } from 'motion/react-client';
 
 export const App: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [metrics, setMetrics] = useState<RiskPropagationMetrics>(initialMetrics);
-  const [assets, setAssets] = useState<Asset[]>(initialAssets);
-  const [selectedAsset, setSelectedAsset] = useState<Asset>(initialAssets[0]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [propagationSpeed, setPropagationSpeed] = useState<number>(initialMetrics.propagationSpeed);
   const [apiUrl, setApiUrl] = useState<string>(
     import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
@@ -54,6 +57,10 @@ export const App: React.FC = () => {
   }, []);
 
   const loadData = async (keepSelectedId?: string) => {
+    if (!localStorage.getItem('token')) {
+      navigate('/login');
+      return;
+    }
     setIsRefreshing(true);
     setErrorMessage('');
     try {
@@ -68,10 +75,12 @@ export const App: React.FC = () => {
         const found = fetchedAssets.find((a) => String(a.id) === String(targetId));
         setSelectedAsset(found || fetchedAssets[0]);
       } else {
-        setSelectedAsset(null as unknown as Asset);
+        setSelectedAsset(null);
       }
     } catch {
-      setErrorMessage('Falha ao conectar com o servidor Django. Verifique se a API está online.');
+      localStorage.removeItem('token');
+      setErrorMessage('');
+      navigate('/login')
     } finally {
       setIsRefreshing(false);
     }
@@ -83,6 +92,7 @@ export const App: React.FC = () => {
   };
 
   const handleSaveAsset = async (updatedFields: Partial<Asset>) => {
+    if (!selectedAsset) return;
     await updateAssetOnServer(selectedAsset.id, updatedFields);
     await loadData(selectedAsset.id);
   };
@@ -94,26 +104,31 @@ export const App: React.FC = () => {
   };
 
   const handleLinkCve = async (cve: CveItem) => {
+    if (!selectedAsset) return;
     await linkCveToAssetOnServer(selectedAsset.id, cve);
     await loadData(selectedAsset.id);
   };
 
   const handleUnlinkCve = async (cveId: string) => {
+    if (!selectedAsset) return;
     await unlinkCveOnServer(selectedAsset.id, cveId);
     await loadData(selectedAsset.id);
   };
 
   const handleAddConnection = async (conn: NetworkConnection) => {
+    if (!selectedAsset) return;
     await addConnectionOnServer(selectedAsset.id, conn);
     await loadData(selectedAsset.id);
   };
 
   const handleUpdateConnection = async (connId: string, updated: Partial<NetworkConnection>) => {
+    if (!selectedAsset) return;
     await updateConnectionOnServer(selectedAsset.id, connId, updated);
     await loadData(selectedAsset.id);
   };
 
   const handleDeleteConnection = async (connId: string) => {
+    if (!selectedAsset) return;
     await deleteConnectionOnServer(selectedAsset.id, connId);
     await loadData(selectedAsset.id);
   };
@@ -123,11 +138,26 @@ export const App: React.FC = () => {
     await loadData(created.id);
   };
 
+  const handleMenuClick = async (tab: ActiveTab) => {
+    if (tab === 'dashboard') {
+      setActiveTab('dashboard')
+      navigate('/dashboard')
+    }
+    if (tab === 'inventory') {
+      setActiveTab('inventory')
+      navigate('/inventario')
+    }
+    if (tab === 'details') { 
+      setActiveTab('details')
+      navigate('/equipamentos')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col font-sans selection:bg-rose-500/30 selection:text-rose-200">
       <Navbar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleMenuClick}
         onOpenApiConfig={() => setIsApiConfigModalOpen(true)}
         onRefreshData={() => loadData()}
         isRefreshing={isRefreshing}
@@ -154,20 +184,24 @@ export const App: React.FC = () => {
 
       ) : (
         
-        <>
-          {activeTab === 'dashboard' && (
+        <Routes>
+          <Route
+          path="/dashboard"
+          element={
             <DashboardView
-              metrics={metrics}
-              assets={assets}
-              onSelectAsset={handleSelectAsset}
-              selectedAssetId={selectedAsset?.id}
-              propagationSpeed={propagationSpeed}
-              onPropagationSpeedChange={setPropagationSpeed}
-              onGoToInventory={() => setActiveTab('inventory')}
-            />
-          )}
+            metrics={metrics}
+            assets={assets}
+            onSelectAsset={handleSelectAsset}
+            selectedAssetId={selectedAsset?.id}
+            propagationSpeed={propagationSpeed}
+            onPropagationSpeedChange={setPropagationSpeed}
+            onGoToInventory={() => navigate('/dashboard')}
+            />  
+          } />
 
-          {activeTab === 'inventory' && (
+          <Route
+          path="/inventario"
+          element={
             <AssetInventoryTable
               assets={assets}
               onSelectAsset={handleSelectAsset}
@@ -182,9 +216,12 @@ export const App: React.FC = () => {
               onDeleteAsset={handleDeleteAsset}
               onOpenAddModal={() => setIsAddAssetModalOpen(true)}
             />
-          )}
+          } />
 
-          {activeTab === 'details' && selectedAsset && (
+          <Route
+          path="/equipamentos"
+          element={
+            selectedAsset ? (
             <EquipmentDetails
               asset={selectedAsset}
               allAssets={assets}
@@ -197,8 +234,24 @@ export const App: React.FC = () => {
               onUpdateConnection={handleUpdateConnection}
               onDeleteConnection={handleDeleteConnection}
             />
-          )}
-        </>
+            ) : (
+              <div className="p-8 text-center text-slate-500 font-mono mt-10">
+                Nenhum equipamento selecionado ou cadastrado no banco de dados.
+              </div>
+            )
+          } />
+          <Route
+          path='/login'
+          element={<LoginView />} />
+          <Route
+          path="/terminal"
+          element={
+            <div>
+              <h1>Terminal em construção</h1>
+            </div>
+
+          } />
+        </Routes>
       )}
       </main>
 
@@ -262,3 +315,5 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
+
