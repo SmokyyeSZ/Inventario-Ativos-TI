@@ -8,6 +8,7 @@ from .models import Equipamento, Vulnerabilidade, ConexaoRede
 from .serializers import EquipamentoSerializers, VulnerabilidadeSerializers
 from .motor_matematico import MotorMatematico
 from .cve_service import CVEService
+from rest_framework.permissions import IsAuthenticated
 
 def listar_equipamentos(request):
     ativos = Equipamento.objects.all()
@@ -117,8 +118,14 @@ def remover_cve(request, id, cve_code):
     return redirect('detalhes', id=id)
 
 class EquipamentoListCreate(generics.ListCreateAPIView):
-    queryset = Equipamento.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = EquipamentoSerializers
+
+    def get_queryset(self):
+        return Equipamento.objects.filter(responsavel=self.request.user)
+
+    def perform_create(self, serializer):
+        return serializer.save(responsavel=self.request.user)
 
 class VulnerabilidadesListCreate(generics.ListCreateAPIView):
     queryset = Vulnerabilidade.objects.all()
