@@ -50,7 +50,7 @@ export const App: React.FC = () => {
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [propagationSpeed, setPropagationSpeed] = useState<number>(initialMetrics.propagationSpeed);
   const [apiUrl, setApiUrl] = useState<string>(
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+    import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:8000/api')
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');

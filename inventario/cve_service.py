@@ -6,7 +6,7 @@ class CVEService:
         url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_id}"
 
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=5)
             if response.status_code == 200:
                 dados = response.json()
 

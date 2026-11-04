@@ -1,11 +1,13 @@
 import axios from 'axios';
 import { Asset, CveItem, NetworkConnection, RiskPropagationMetrics } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/';
+const DEFAULT_API_BASE_URL = import.meta.env.PROD ? '/api/' : 'http://localhost:8000/api/';
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+const API_BASE_URL = rawApiBaseUrl.endsWith('/') ? rawApiBaseUrl : `${rawApiBaseUrl}/`;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 5000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
