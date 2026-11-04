@@ -125,7 +125,8 @@ class EquipamentoListCreate(generics.ListCreateAPIView):
         return Equipamento.objects.filter(responsavel=self.request.user)
 
     def perform_create(self, serializer):
-        return serializer.save(responsavel=self.request.user)
+        responsavel = serializer.validated_data.get('responsavel') or self.request.user
+        return serializer.save(responsavel=responsavel)
 
 class VulnerabilidadesListCreate(generics.ListCreateAPIView):
     queryset = Vulnerabilidade.objects.all()

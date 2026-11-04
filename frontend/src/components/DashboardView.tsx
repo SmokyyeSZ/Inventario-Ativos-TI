@@ -122,6 +122,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-7 xl:col-span-8 min-h-[480px]">
+
           <NetworkTopologyGraph
             assets={assets}
             onSelectAsset={onSelectAsset}

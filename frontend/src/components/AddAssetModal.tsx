@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { X, Server, Plus } from 'lucide-react';
-import { Asset, SeverityLevel } from '../types';
+import { Asset } from '../types';
 
 interface AddAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (newAsset: Asset) => void;
+  onAdd: (newAsset: Partial<Asset>) => Promise<void> | void;
 }
 
 export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, onAdd }) => {
@@ -13,37 +14,62 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
   const [departamento, setDepartamento] = useState('Infraestrutura Cloud');
   const [ip, setIp] = useState('10.100.');
   const [tipo, setTipo] = useState<Asset['tipo']>('Internal Server');
-  const [responsavel,setResponsavel] = useState('');
-  const [criticidade, setCriticidade] = useState<SeverityLevel>('High');
+  const [responsavel, setResponsavel] = useState('');
   const [sistemaOperacional, setSistemaOperacional] = useState('Ubuntu Linux 24.04 LTS');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim() || !ip.trim()) return;
 
-    const newAsset: Asset = {
-      id: `ast-${Date.now().toString().slice(-4)}`,
+    setErrorMsg('');
+    setIsSubmitting(true);
+
+    const newAsset: Partial<Asset> = {
       nome: nome.trim().toUpperCase(),
       departamento: departamento.trim(),
       ip: ip.trim(),
-      mac: '00:1A:2B:' + Math.floor(10 + Math.random() * 89) + ':' + Math.floor(10 + Math.random() * 89) + ':' + Math.floor(10 + Math.random() * 89),
+      mac:
+        '00:1A:2B:' +
+        Math.floor(10 + Math.random() * 89) +
+        ':' +
+        Math.floor(10 + Math.random() * 89) +
+        ':' +
+        Math.floor(10 + Math.random() * 89),
       tipo,
-      responsavel,
-      criticidade,
+      responsavel: responsavel.trim(),
       riscoFinal: 0.0,
       pesoPropagacao: 0.0,
       status: 'online',
       ultimoScan: 'Agora mesmo',
-      sistemaOperacional,
-      cves: [],
-      conexoes: [],
+      sistemaOperacional: sistemaOperacional.trim(),
     };
 
-    onAdd(newAsset);
-    onClose();
-    setNome('');
+    try {
+      await onAdd(newAsset);
+      setNome('');
+      setResponsavel('');
+      onClose();
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data) {
+        const data = err.response.data as Record<string, unknown>;
+        const firstError = Object.values(data)[0];
+        if (Array.isArray(firstError) && typeof firstError[0] === 'string') {
+          setErrorMsg(firstError[0]);
+        } else if (typeof firstError === 'string') {
+          setErrorMsg(firstError);
+        } else {
+          setErrorMsg('Não foi possível salvar o ativo. Verifique os dados informados.');
+        }
+      } else {
+        setErrorMsg('Não foi possível salvar o ativo. Verifique a conexão com a API.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -63,6 +89,12 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {errorMsg && (
+            <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-500/40 text-xs font-mono text-rose-300">
+              {errorMsg}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-mono text-slate-400 mb-1.5">Nome do Ativo</label>
             <input
@@ -88,29 +120,31 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
             </div>
 
             <div>
-              <label className='block text-xs font-mono text-slate-400 mb-1.5'>Responsavel</label>
+              <label className="block text-xs font-mono text-slate-400 mb-1.5">Responsável</label>
               <input
                 type="text"
                 required
+                placeholder="Ex: usuário responsável"
                 value={responsavel}
                 onChange={(e) => setResponsavel(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-mono text-slate-400 mb-1.5">Endereço IP</label>
               <input
                 type="text"
                 required
+                maxLength={15}
                 value={ip}
                 onChange={(e) => setIp(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-mono text-slate-400 mb-1.5">Tipo de Ativo</label>
               <select
@@ -118,26 +152,12 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
                 onChange={(e) => setTipo(e.target.value as Asset['tipo'])}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
               >
-                <option value="Database">Database Server</option>
-                <option value="Gateway">API Gateway / Proxy</option>
-                <option value="Internal Server">Servidor Interno</option>
-                <option value="Workstation">Estação de Trabalho</option>
-                <option value="Cloud Endpoint">Cloud Endpoint</option>
-                <option value="Firewall">Firewall / Borda</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1.5">Criticidade</label>
-              <select
-                value={criticidade}
-                onChange={(e) => setCriticidade(e.target.value as SeverityLevel)}
-                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
-              >
-                <option value="Critical">Crítica (Tier 1 / Multiplica Risco x2.0)</option>
-                <option value="High">Alta (Produção / Multiplica Risco x1.5)</option>
-                <option value="Medium">Média (Apoio / Mantém Risco x1.0)</option>
-                <option value="Low">Baixa (Isolado / Reduz Risco x0.5)</option>
+                <option value="Database">Database Server (x1.5)</option>
+                <option value="Gateway">API Gateway / Proxy (x1.0)</option>
+                <option value="Internal Server">Servidor Interno (x1.5)</option>
+                <option value="Workstation">Estação de Trabalho (x0.5)</option>
+                <option value="Cloud Endpoint">Cloud Endpoint (x1.5)</option>
+                <option value="Firewall">Firewall / Borda (x0.5)</option>
               </select>
             </div>
           </div>
@@ -162,10 +182,11 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-cyan-600 hover:bg-cyan-500 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-cyan-600 hover:bg-cyan-500 disabled:opacity-60 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Adicionar ao Inventário
+              {isSubmitting ? 'Salvando...' : 'Adicionar ao Inventário'}
             </button>
           </div>
         </form>

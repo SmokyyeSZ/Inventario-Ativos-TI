@@ -43,14 +43,50 @@ class Equipamento(models.Model):
     ultimo_scan = models.CharField(max_length=50, default='Aguardando scan...')
     peso_propagacao = models.FloatField(default=0.0)
     
-    NIVEIS_CRITICIDADE = [
-        ('Critical', 'Crítica (Tier 1 Core)'),
-        ('High', 'Alta (Produção)'),
-        ('Medium', 'Média (Apoio)'),
-        ('Low', 'Baixa (Periférico)'),
-    ]
-    criticidade = models.CharField(
-        max_length=20, 
-        choices=NIVEIS_CRITICIDADE, 
-        default='Medium'
-    )
+
+    def fator_exposicao(self):
+        return 1.0
+
+class Servidor(Equipamento):
+    def fator_exposicao(self):
+        return 1.5
+
+class Firewall(Equipamento):
+    def fator_exposicao(self):
+        return 0.5
+
+class Database(Equipamento):
+    def fator_exposicao(self):
+        return 1.5
+
+class Gateway(Equipamento):
+    def fator_exposicao(self):
+        return 1.0
+
+class Workstation(Equipamento):
+    def fator_exposicao(self):
+        return 0.5
+
+class CloudEndpoint(Equipamento):
+    def fator_exposicao(self):
+        return 1.5
+
+def Factory_equipamento(dados):
+    opc = {
+        'Servidor': Servidor,
+        'Internal Server': Servidor,
+        'Firewall': Firewall,
+        'Equipamento': Equipamento,
+        'Database': Database,
+        'Gateway': Gateway,
+        'Workstation': Workstation,
+        'CloudEndpoint': CloudEndpoint,
+        'Cloud Endpoint': CloudEndpoint,
+    }
+
+    dados_limpos = dict(dados)
+    dados_limpos.pop('vulnerabilidades', None)
+    dados_limpos.pop('conexoes', None)
+
+    classe_alvo = opc.get(dados_limpos.get('tipo'), Equipamento)
+    return classe_alvo(**dados_limpos)

@@ -26,7 +26,7 @@ export const ConnectTerminalModal: React.FC<ConnectTerminalModalProps> = ({ asse
         `[SOC-NET] Protocolo: TLS 1.3 / SSH-RSA 4096-bit hardlink...`,
         `[SOC-NET] Autenticado com sucesso via certificado de infraestrutura.`,
         `[SYS-INFO] Host: ${asset.nome} | OS: ${asset.sistemaOperacional}`,
-        `[SECURITY] Nível de Risco Ativo: ${asset.riscoFinal} (${asset.criticidade.toUpperCase()})`,
+        `[SECURITY] Nível de Risco Ativo: ${asset.riscoFinal} (Exposição x${(asset.fatorExposicao ?? 1.0).toFixed(1)})`,
         `[PROMPT] Digite um comando ou utilize os testes rápidos abaixo.`,
       ]);
       setIsConnected(true);

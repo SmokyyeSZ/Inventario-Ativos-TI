@@ -1,8 +1,5 @@
 import axios from 'axios';
 import { Asset, CveItem, NetworkConnection, RiskPropagationMetrics } from '../types';
-import React, {useState} from 'react';
-import { useNavigate } from 'react-router-dom';
-import { config } from 'dotenv';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/';
 
@@ -16,12 +13,12 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  return config
+  return config;
 });
 
 export const initialMetrics: RiskPropagationMetrics = {
@@ -47,13 +44,24 @@ export function updateApiBaseUrl(newUrl: string) {
   apiClient.defaults.baseURL = target;
 }
 
+export async function loginOnServer(
+  username: string,
+  password: string
+): Promise<{ access: string; refresh: string }> {
+  const res = await apiClient.post<{ access: string; refresh: string }>('token/', {
+    username,
+    password,
+  });
+  return res.data;
+}
+
 export async function fetchDashboardMetrics(): Promise<RiskPropagationMetrics> {
-  const res = await apiClient.get<RiskPropagationMetrics>('/metrics/');
+  const res = await apiClient.get<RiskPropagationMetrics>('metrics/');
   return res.data;
 }
 
 export async function fetchAssets(): Promise<Asset[]> {
-  const res = await apiClient.get<Asset[]>('/equipamentos/');
+  const res = await apiClient.get<Asset[]>('equipamentos/');
   return res.data;
 }
 
@@ -69,8 +77,8 @@ export async function fetchAssetById(id: string): Promise<Asset | null> {
 export async function createAssetOnServer(newAsset: Partial<Asset>): Promise<Asset> {
   try {
     const res = await apiClient.post<Asset>(`equipamentos/`, newAsset);
-    return res.data
-  } catch (error){
+    return res.data;
+  } catch (error) {
     throw error;
   }
 }
@@ -79,7 +87,7 @@ export async function updateAssetOnServer(id: string, updated: Partial<Asset>): 
   try {
     const res = await apiClient.patch<Asset>(`equipamentos/${id}/`, updated);
     return res.data;
-  } catch (error){
+  } catch (error) {
     throw error;
   }
 }
@@ -135,3 +143,56 @@ export async function testConnectionPing(assetId: string): Promise<{ success: bo
     };
   }
 }
+
+let refreshTokenPromise: Promise<string> | null = null;
+
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    const isAuthEndpoint = originalRequest?.url?.includes('token/');
+
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
+      originalRequest._retry = true;
+
+      try {
+        if (!refreshTokenPromise) {
+          const storedRefreshToken = localStorage.getItem('refreshToken');
+          if (!storedRefreshToken) throw new Error('No refresh token found');
+
+          const baseUrl = apiClient.defaults.baseURL || API_BASE_URL;
+          const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
+          refreshTokenPromise = axios
+            .post<{ access: string }>(`${normalizedBase}token/refresh/`, {
+              refresh: storedRefreshToken,
+            })
+            .then((res) => {
+              const newAccessToken = res.data.access;
+              localStorage.setItem('accessToken', newAccessToken);
+              return newAccessToken;
+            })
+            .finally(() => {
+              refreshTokenPromise = null;
+            });
+        }
+
+        const newAccessToken = await refreshTokenPromise;
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);

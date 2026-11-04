@@ -46,7 +46,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
   const [showAddConn, setShowAddConn] = useState(false);
   const [editingConnId, setEditingConnId] = useState<string | null>(null);
   const [targetAssetId, setTargetAssetId] = useState(otherAssets[0]?.id || '');
-  const [port, setPort] = useState(443);
+  const [port, setPort] = useState<number | ''>(443);
   const [protocol, setProtocol] = useState('HTTPS / TLS');
   const [weight, setWeight] = useState(0.3);
   const [direction, setDirection] = useState<NetworkConnection['direcao']>('Bidirecional');
@@ -82,7 +82,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
     e.preventDefault();
     if (editingConnId) {
       onUpdateConnection(editingConnId, {
-        porta: Number(port),
+        porta: Number(port) || 443,
         protocolo: protocol,
         pesoPropagacao: Number(weight),
         direcao: direction,
@@ -101,7 +101,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
       origemId: asset.id,
       destinoId: targetAsset.id,
       destinoNome: targetAsset.nome,
-      porta: Number(port),
+      porta: Number(port) || 443,
       protocolo: protocol,
       pesoPropagacao: Number(weight),
       direcao: direction,
@@ -137,7 +137,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                   {asset.tipo}
                 </span>
                 <span className="text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40">
-                  Criticidade: {asset.criticidade.toUpperCase()}
+                  Exposição: x{(asset.fatorExposicao ?? 1.0).toFixed(1)}
                 </span>
               </div>
 
@@ -165,7 +165,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                 <div
                   className="absolute inset-0 rounded-full border-2 border-rose-500"
                   style={{
-                    clipPath: `polygon(50% 50%, 50% 0%, ${asset.riscoFinal * 10}% 0%, 100% 100%, 0% 100%)`,
+                    clipPath: `polygon(50% 50%, 50% 0%, ${Math.min(asset.riscoFinal * 10, 100)}% 0%, 100% 100%, 0% 100%)`,
                   }}
                 ></div>
                 <Radio className="w-5 h-5 text-rose-500 animate-pulse" />
@@ -356,7 +356,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                   <input
                     type="number"
                     value={port}
-                    onChange={(e) => setPort(parseInt(e.target.value) || 0)}
+                    onChange={(e) => setPort(e.target.value ? (Number(e.target.value)) : "" )}
                     className="w-full px-2.5 py-1.5 bg-[#0a1120] border border-slate-700 rounded text-xs font-mono text-slate-200"
                   />
                 </div>

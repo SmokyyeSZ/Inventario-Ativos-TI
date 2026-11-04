@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { X, Save, ShieldAlert, Cpu } from 'lucide-react';
-import { Asset, SeverityLevel } from '../types';
+import axios from 'axios';
+import { X, Save, Cpu } from 'lucide-react';
+import { Asset } from '../types';
 
 interface EditAssetModalProps {
   asset: Asset;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updated: Partial<Asset>) => void;
+  onSave: (updated: Partial<Asset>) => Promise<void> | void;
 }
 
 export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, onClose, onSave }) => {
@@ -14,28 +15,48 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
   const [departamento, setDepartamento] = useState(asset.departamento);
   const [ip, setIp] = useState(asset.ip);
   const [mac, setMac] = useState(asset.mac);
-  const [responsavel, setResponsavel] = useState(asset.responsavel)
+  const [responsavel, setResponsavel] = useState(asset.responsavel || '');
   const [tipo, setTipo] = useState(asset.tipo);
-  const [sistemaOperacional, setSistemaOperacional] = useState(asset.sistemaOperacional);
-  const [criticidade, setCriticidade] = useState<SeverityLevel>(asset.criticidade);
+  const [sistemaOperacional, setSistemaOperacional] = useState(asset.sistemaOperacional || '');
   const [riscoFinal, setRiscoFinal] = useState<number>(asset.riscoFinal);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      nome,
-      departamento,
-      ip,
-      mac,
-      sistemaOperacional,
-      criticidade,
-      riscoFinal: Number(riscoFinal),
-      tipo,
-      responsavel,
-    });
-    onClose();
+    setErrorMsg('');
+    setIsSaving(true);
+    try {
+      await onSave({
+        nome: nome.trim(),
+        departamento: departamento.trim(),
+        ip: ip.trim(),
+        mac: mac.trim(),
+        sistemaOperacional: sistemaOperacional.trim(),
+        riscoFinal: Number(riscoFinal),
+        tipo,
+        responsavel: responsavel.trim(),
+      });
+      onClose();
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data) {
+        const data = err.response.data as Record<string, unknown>;
+        const firstError = Object.values(data)[0];
+        if (Array.isArray(firstError) && typeof firstError[0] === 'string') {
+          setErrorMsg(firstError[0]);
+        } else if (typeof firstError === 'string') {
+          setErrorMsg(firstError);
+        } else {
+          setErrorMsg('Não foi possível salvar as alterações. Verifique os dados informados.');
+        }
+      } else {
+        setErrorMsg('Não foi possível salvar as alterações. Verifique a conexão com a API.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -55,6 +76,12 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {errorMsg && (
+            <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-500/40 text-xs font-mono text-rose-300">
+              {errorMsg}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-mono text-slate-400 mb-1.5">Nome do Ativo</label>
@@ -83,6 +110,7 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
               <input
                 type="text"
                 required
+                maxLength={15}
                 value={ip}
                 onChange={(e) => setIp(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm font-mono text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
@@ -94,6 +122,7 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
               <input
                 type="text"
                 required
+                maxLength={17}
                 value={mac}
                 onChange={(e) => setMac(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm font-mono text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
@@ -118,44 +147,29 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
               <select
                 required
                 value={tipo}
-                onChange={(e) => setTipo(e.target.value as any)}
+                onChange={(e) => setTipo(e.target.value as Asset['tipo'])}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-rose-500"
               >
-                <option value="Database">Database</option>
-                <option value="Gateway">Gateway</option>
-                <option value="Internal Server">Internal Server</option>
-                <option value="Workstation">Workstation</option>
-                <option value="Cloud Endpoint">Cloud Endpoint</option>
-                <option value="Firewall">Firewall</option>
+                <option value="Database">Database (x1.5)</option>
+                <option value="Gateway">Gateway (x1.0)</option>
+                <option value="Internal Server">Internal Server (x1.5)</option>
+                <option value="Workstation">Workstation (x0.5)</option>
+                <option value="Cloud Endpoint">Cloud Endpoint (x1.5)</option>
+                <option value="Firewall">Firewall (x0.5)</option>
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-mono text-slate-400 mb-1.5">Sistema Operacional / Firmware</label>
-            <input
-              type="text"
-              required
-              value={sistemaOperacional}
-              onChange={(e) => setSistemaOperacional(e.target.value)}
-              className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1.5">Criticidade Operacional</label>
-              <select
+              <label className="block text-xs font-mono text-slate-400 mb-1.5">Sistema Operacional / Firmware</label>
+              <input
+                type="text"
                 required
-                value={criticidade}
-                onChange={(e) => setCriticidade(e.target.value as SeverityLevel)}
-                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
-              >
-                <option value="Critical">Crítica (Tier 1 / Multiplica Risco x2.0)</option>
-                <option value="High">Alta (Produção / Multiplica Risco x1.5)</option>
-                <option value="Medium">Média (Apoio / Mantém Risco x1.0)</option>
-                <option value="Low">Baixa (Isolado / Reduz Risco x0.5)</option>
-              </select>
+                value={sistemaOperacional}
+                onChange={(e) => setSistemaOperacional(e.target.value)}
+                className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+              />
             </div>
 
             <div>
@@ -184,10 +198,11 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all cursor-pointer"
+              disabled={isSaving}
+              className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-60 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              Salvar Alterações
+              {isSaving ? 'Salvando...' : 'Salvar Alterações'}
             </button>
           </div>
         </form>
