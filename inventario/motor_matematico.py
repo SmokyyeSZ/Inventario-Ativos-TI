@@ -1,14 +1,9 @@
 import numpy as np
-from .models import Equipamento, ConexaoRede
+from .models import Equipamento, Factory_equipamento
 
 class MotorMatematico:
     def __init__(self):
-        self.fatores_exposicao = {
-            'CRITICAL':2.0,
-            'HIGH': 1.5,
-            'MEDIUM': 1.0,
-            'LOW': 0.5
-        }
+        pass
 
     def calcular_risco_rede(self):
         ativos = list(Equipamento.objects.all())
@@ -25,7 +20,7 @@ class MotorMatematico:
         for i, ativo in enumerate(ativos):
             score_total = sum(vuln.score for vuln in ativo.vulnerabilidades.all() if vuln.status != 'Corrigido')
 
-            expo = self.fatores_exposicao.get(ativo.criticidade.upper(), 1.0)
+            expo = Factory_equipamento({'tipo': ativo.tipo}).fator_exposicao()
 
             risco_proprio = score_total * expo
             vetor_b[i] = risco_proprio
@@ -60,3 +55,4 @@ class MotorMatematico:
             ativo.save()
 
         return True
+

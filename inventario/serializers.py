@@ -1,6 +1,24 @@
+from django.contrib.auth.models import User
 from django.db.models import Q
 from rest_framework import serializers
-from .models import Equipamento, Vulnerabilidade, ConexaoRede
+from .models import Equipamento, Vulnerabilidade, ConexaoRede, Factory_equipamento
+
+
+class ResponsavelField(serializers.Field):
+    def to_representation(self, value):
+        return value.username if value else ''
+
+    def to_internal_value(self, data):
+        if data is None or str(data).strip() == '':
+            return None
+        valor = str(data).strip()
+        usuario = User.objects.filter(username__iexact=valor).first()
+        if not usuario and valor.isdigit():
+            usuario = User.objects.filter(pk=int(valor)).first()
+        if not usuario:
+            raise serializers.ValidationError(f"Usuário '{valor}' não encontrado.")
+        return usuario
+
 
 class VulnerabilidadeSerializers(serializers.ModelSerializer):
     id = serializers.CharField(source='cve_code', read_only=True)
@@ -9,6 +27,7 @@ class VulnerabilidadeSerializers(serializers.ModelSerializer):
     class Meta:
         model = Vulnerabilidade
         fields = '__all__'
+
 
 class ConexaoRedeSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
@@ -20,14 +39,34 @@ class ConexaoRedeSerializer(serializers.ModelSerializer):
         model = ConexaoRede
         fields = ['id', 'origem_id', 'destino_id', 'destino_nome', 'porta', 'protocolo', 'peso_propagacao', 'direcao', 'status']
 
+
 class EquipamentoSerializers(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
+    responsavel = ResponsavelField(required=False, allow_null=True)
+    fator_exposicao = serializers.SerializerMethodField()
     cves = VulnerabilidadeSerializers(source='vulnerabilidades', many=True, read_only=True)
     conexoes = serializers.SerializerMethodField()
 
     class Meta:
         model = Equipamento
         fields = '__all__'
+
+    def create(self, validated_data):
+        vulnerabilidades = validated_data.pop('vulnerabilidades', [])
+        instancia = Factory_equipamento(validated_data)
+        instancia.save()
+        if vulnerabilidades:
+            instancia.vulnerabilidades.set(vulnerabilidades)
+        return instancia
+
+    def get_fator_exposicao(self, obj):
+        return Factory_equipamento({'tipo': obj.tipo}).fator_exposicao()
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if ret.get('responsavel') is None:
+            ret['responsavel'] = ''
+        return ret
 
     def get_conexoes(self, obj):
         conexoes_qs = ConexaoRede.objects.filter(Q(origem=obj) | Q(destino=obj))

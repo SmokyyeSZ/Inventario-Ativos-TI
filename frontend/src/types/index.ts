@@ -30,7 +30,7 @@ export interface Asset {
   ip: string;
   mac: string;
   tipo: 'Database' | 'Gateway' | 'Internal Server' | 'Workstation' | 'Cloud Endpoint' | 'Firewall';
-  criticidade: SeverityLevel;
+  fatorExposicao?: number;
   riscoFinal: number;
   cves: CveItem[];
   conexoes: NetworkConnection[];
