@@ -1,15 +1,10 @@
+version: '3.8'
+
 services:
   backend:
     build: .
-    ports:
-      - "2215:2215"
-    restart: unless-stopped
-
+    
   frontend:
     build: ./frontend
     ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-    
+      - "2215:80"
