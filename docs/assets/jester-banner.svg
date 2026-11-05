@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 250" width="100%" height="250" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05080f" />
+      <stop offset="50%" stop-color="#090e1a" />
+      <stop offset="100%" stop-color="#060a12" />
+    </linearGradient>
+
+    <linearGradient id="borderBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.15" />
+      <stop offset="50%" stop-color="#ef4444" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.85" />
+    </linearGradient>
+
+    <linearGradient id="riskEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.95" />
+    </linearGradient>
+
+    <linearGradient id="cyanEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0.45" />
+    </linearGradient>
+
+    <pattern id="cyberGrid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#1e293b" stroke-width="0.6" stroke-opacity="0.45" />
+    </pattern>
+
+    <filter id="redGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Card Background -->
+  <rect x="2" y="2" width="956" height="246" rx="16" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="1.5" />
+  <rect x="2" y="2" width="956" height="246" rx="16" fill="url(#cyberGrid)" />
+
+  <!-- Ambient Glows -->
+  <circle cx="115" cy="125" r="85" fill="#ef4444" fill-opacity="0.06" />
+  <circle cx="810" cy="125" r="95" fill="#06b6d4" fill-opacity="0.06" />
+
+  <!-- ================= LEFT: ANIMATED JESTER EMBLEM ================= -->
+  <g transform="translate(30, 40) scale(0.85)">
+    <g>
+      <circle cx="100" cy="100" r="92" stroke="#1e293b" stroke-width="2.5" stroke-dasharray="6 4" />
+      <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="32s" repeatCount="indefinite" />
+    </g>
+    <g>
+      <circle cx="100" cy="100" r="82" stroke="#334155" stroke-width="1.5" stroke-dasharray="18 8" />
+      <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="22s" repeatCount="indefinite" />
+    </g>
+    <circle cx="100" cy="100" r="74" stroke="#ef4444" stroke-width="1.2" stroke-opacity="0.35">
+      <animate attributeName="stroke-opacity" values="0.2;0.65;0.2" dur="3s" repeatCount="indefinite" />
+    </circle>
+
+    <path d="M28 100 L44 100 M156 100 L172 100 M100 28 L100 44 M100 156 L100 172" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- Jester Crown & Mask -->
+    <path d="M100 22 L116 54 L100 66 L84 54 Z" fill="#1e1b2e" stroke="#ef4444" stroke-width="2" />
+    <path d="M100 22 L100 66" stroke="#f87171" stroke-width="1.5" />
+
+    <path d="M84 54 L46 44 L32 78 L42 114 L58 102 L64 74 Z" fill="#131926" stroke="#dc2626" stroke-width="2" />
+    <path d="M48 60 L40 82 L48 100" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" />
+    <circle cx="42" cy="116" r="4" fill="#ef4444" filter="url(#redGlow)">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
+    </circle>
+
+    <path d="M116 54 L154 44 L168 78 L158 114 L142 102 L136 74 Z" fill="#131926" stroke="#dc2626" stroke-width="2" />
+    <path d="M152 60 L160 82 L152 100" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" />
+    <circle cx="158" cy="116" r="4" fill="#ef4444" filter="url(#redGlow)">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" begin="1s" repeatCount="indefinite" />
+    </circle>
+
+    <path d="M68 72 L100 86 L132 72 L144 112 L100 168 L56 112 Z" fill="#090d16" stroke="#ef4444" stroke-width="2.2" />
+    <path d="M68 72 L100 106 L132 72" stroke="#dc2626" stroke-width="1.5" />
+    <path d="M100 106 L100 138" stroke="#dc2626" stroke-width="1.5" />
+
+    <!-- Glowing Eyes -->
+    <path d="M74 104 L88 96 L94 108 L80 114 Z" fill="#ef4444" fill-opacity="0.25" stroke="#f87171" stroke-width="1.8">
+      <animate attributeName="fill-opacity" values="0.15;0.55;0.15" dur="2.6s" repeatCount="indefinite" />
+    </path>
+    <path d="M126 104 L112 96 L106 108 L120 114 Z" fill="#ef4444" fill-opacity="0.25" stroke="#f87171" stroke-width="1.8">
+      <animate attributeName="fill-opacity" values="0.15;0.55;0.15" dur="2.6s" repeatCount="indefinite" />
+    </path>
+
+    <path d="M96 114 L100 126 L104 114" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M72 134 C80 156 120 156 128 134 C116 142 84 142 72 134 Z" fill="#1c070b" stroke="#ef4444" stroke-width="2" stroke-linejoin="round" />
+    <path d="M80 137 L80 144 M90 139 L90 147 M100 140 L100 148 M110 139 L110 147 M120 137 L120 144" stroke="#dc2626" stroke-width="1" />
+
+    <path d="M64 122 L76 128 M136 122 L124 128 M100 148 L100 164" stroke="#38bdf8" stroke-width="1.4" stroke-linecap="round" />
+    <circle cx="76" cy="128" r="2.2" fill="#38bdf8" />
+    <circle cx="124" cy="128" r="2.2" fill="#38bdf8" />
+    <circle cx="100" cy="164" r="2.8" fill="#ef4444" />
+    <circle cx="100" cy="86" r="3" fill="#f87171" />
+  </g>
+
+  <!-- ================= CENTER: TITLE & METADATA ================= -->
+  <g transform="translate(222, 62)">
+    <!-- Status Pill -->
+    <rect x="0" y="0" width="248" height="22" rx="11" fill="#0d1526" stroke="#06b6d4" stroke-opacity="0.45" stroke-width="1" />
+    <circle cx="14" cy="11" r="3.5" fill="#10b981">
+      <animate attributeName="opacity" values="0.35;1;0.35" dur="1.6s" repeatCount="indefinite" />
+    </circle>
+    <text x="26" y="14.5" fill="#67e8f9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" font-weight="bold" letter-spacing="1">
+      SOC TELEMETRY · ONLINE
+    </text>
+
+    <!-- Main Brand -->
+    <text x="0" y="64" fill="#f8fafc" font-family="Consolas, 'Courier New', monospace" font-size="40" font-weight="800" letter-spacing="2">
+      JESTER <tspan fill="#ef4444">RISK</tspan>
+    </text>
+
+    <!-- Subtitle -->
+    <text x="0" y="90" fill="#94a3b8" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="500">
+      Inventário Inteligente de Ativos de TI &amp; Propagação Espectral de Risco
+    </text>
+
+    <!-- Mathematical & Tech Pills -->
+    <g transform="translate(0, 110)">
+      <rect x="0" y="0" width="142" height="24" rx="6" fill="#160b12" stroke="#ef4444" stroke-opacity="0.5" stroke-width="1" />
+      <text x="71" y="15.5" text-anchor="middle" fill="#fca5a5" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="bold">
+        (I - A) · x = b
+      </text>
+
+      <rect x="152" y="0" width="136" height="24" rx="6" fill="#081827" stroke="#06b6d4" stroke-opacity="0.5" stroke-width="1" />
+      <text x="220" y="15.5" text-anchor="middle" fill="#67e8f9" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="bold">
+        NIST NVD v2.0
+      </text>
+
+      <rect x="298" y="0" width="154" height="24" rx="6" fill="#0d1424" stroke="#64748b" stroke-opacity="0.45" stroke-width="1" />
+      <text x="375" y="15.5" text-anchor="middle" fill="#cbd5e1" font-family="Consolas, 'Courier New', monospace" font-size="11" font-weight="bold">
+        Django 6 + React 19
+      </text>
+    </g>
+  </g>
+
+  <!-- ================= RIGHT: LIVE ANIMATED TOPOLOGY GRAPH ================= -->
+  <g transform="translate(700, 28)">
+    <rect x="0" y="0" width="232" height="194" rx="12" fill="#05080f" fill-opacity="0.85" stroke="#1e293b" stroke-width="1.2" />
+    <text x="14" y="21" fill="#94a3b8" font-family="Consolas, 'Courier New', monospace" font-size="9.5" font-weight="bold">
+      TOPOLOGIA &amp; PROPAGAÇÃO (λmax)
+    </text>
+
+    <!-- Edges -->
+    <path id="edge1" d="M 116 104 Q 72 68 48 64" fill="none" stroke="url(#riskEdge)" stroke-width="1.8" stroke-dasharray="4 3" />
+    <path id="edge2" d="M 116 104 Q 160 68 186 62" fill="none" stroke="url(#riskEdge)" stroke-width="1.8" stroke-dasharray="4 3" />
+    <path id="edge3" d="M 116 104 Q 72 142 50 152" fill="none" stroke="url(#cyanEdge)" stroke-width="1.5" />
+    <path id="edge4" d="M 116 104 Q 162 142 186 150" fill="none" stroke="url(#cyanEdge)" stroke-width="1.5" />
+
+    <!-- Animated Infection / Telemetry Packets -->
+    <circle r="3" fill="#ef4444" filter="url(#redGlow)">
+      <animateMotion dur="2.1s" repeatCount="indefinite" path="M 116 104 Q 72 68 48 64" />
+    </circle>
+    <circle r="3" fill="#f97316" filter="url(#redGlow)">
+      <animateMotion dur="1.8s" begin="0.6s" repeatCount="indefinite" path="M 116 104 Q 160 68 186 62" />
+    </circle>
+    <circle r="2.6" fill="#22d3ee" filter="url(#cyanGlow)">
+      <animateMotion dur="2.6s" begin="0.3s" repeatCount="indefinite" path="M 50 152 Q 72 142 116 104" />
+    </circle>
+    <circle r="2.6" fill="#22d3ee" filter="url(#cyanGlow)">
+      <animateMotion dur="2.4s" begin="1.1s" repeatCount="indefinite" path="M 186 150 Q 162 142 116 104" />
+    </circle>
+
+    <!-- Peripheral Nodes -->
+    <g transform="translate(48, 64)">
+      <circle r="11" fill="#7c2d12" stroke="#f97316" stroke-width="1.6" />
+      <circle r="4" fill="#fdba74" />
+      <text x="0" y="21" text-anchor="middle" fill="#fdba74" font-family="Consolas, monospace" font-size="8">WEB-SRV</text>
+    </g>
+
+    <g transform="translate(186, 62)">
+      <circle r="11" fill="#7f1d1d" stroke="#ef4444" stroke-width="1.6" />
+      <circle r="4" fill="#fca5a5" />
+      <text x="0" y="21" text-anchor="middle" fill="#fca5a5" font-family="Consolas, monospace" font-size="8">CLOUD-API</text>
+    </g>
+
+    <g transform="translate(50, 152)">
+      <circle r="10" fill="#0c4a6e" stroke="#0284c7" stroke-width="1.6" />
+      <circle r="3.5" fill="#7dd3fc" />
+      <text x="0" y="20" text-anchor="middle" fill="#7dd3fc" font-family="Consolas, monospace" font-size="8">FW-EDGE</text>
+    </g>
+
+    <g transform="translate(186, 150)">
+      <circle r="10" fill="#14532d" stroke="#10b981" stroke-width="1.6" />
+      <circle r="3.5" fill="#86efac" />
+      <text x="0" y="20" text-anchor="middle" fill="#86efac" font-family="Consolas, monospace" font-size="8">GW-EXT</text>
+    </g>
+
+    <!-- Core Node with Pulse -->
+    <g transform="translate(116, 104)">
+      <circle r="22" fill="none" stroke="#ef4444" stroke-width="1.2" stroke-opacity="0.5">
+        <animate attributeName="r" values="16;26;16" dur="2.4s" repeatCount="indefinite" />
+        <animate attributeName="stroke-opacity" values="0.7;0.05;0.7" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <circle r="16" fill="#7f1d1d" stroke="#ef4444" stroke-width="2.2" filter="url(#redGlow)" />
+      <circle r="6" fill="#ef4444" />
+      <text x="0" y="28" text-anchor="middle" fill="#ffffff" font-family="Consolas, monospace" font-size="8.5" font-weight="bold">DB-CORE</text>
+    </g>
+  </g>
+
+  <!-- Animated Bottom Cyber Line -->
+  <line x1="16" y1="247" x2="944" y2="247" stroke="#1e293b" stroke-width="2" />
+  <rect x="-220" y="246" width="220" height="2.5" rx="1.25" fill="url(#borderBeam)">
+    <animate attributeName="x" from="-220" to="960" dur="4.2s" repeatCount="indefinite" />
+  </rect>
+</svg>
+
