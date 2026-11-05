@@ -3,119 +3,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
-from django.shortcuts import render, redirect
 from .models import Equipamento, Vulnerabilidade, ConexaoRede
 from .serializers import EquipamentoSerializers, VulnerabilidadeSerializers
 from .motor_matematico import MotorMatematico
 from .cve_service import CVEService
 from rest_framework.permissions import IsAuthenticated
 
-def listar_equipamentos(request):
-    ativos = Equipamento.objects.all()
-
-    contexto = {
-        'equipamentos': ativos
-    }
-
-    return render(request, 'inventario/listar.html', contexto)
-
-def criar_equipamento(request):
-    if request.method == 'POST':
-        nome = request.POST.get('nome')
-        responsavel = request.POST.get('responsavel')
-        departamento = request.POST.get('departamento')
-        tipo = request.POST.get('tipo')
-
-        Equipamento.objects.create(
-            nome=nome,
-            responsavel=responsavel,
-            departamento=departamento,
-            tipo=tipo
-        )
-        return redirect('listar_equipamentos')
-
-    return render(request, 'inventario/criar.html')
-
-def apagar_equipamento(request, id):
-    equipamento = Equipamento.objects.get(id=id)
-    equipamento.delete()
-    return redirect("listar_equipamentos")
-
-def editar_equipamento(request, id):
-    equipamento = Equipamento.objects.get(id=id)
-
-    if request.method == 'POST':
-        equipamento.nome = request.POST.get('nome')
-        equipamento.responsavel = request.POST.get('responsavel')
-        equipamento.departamento = request.POST.get('departamento')
-        equipamento.tipo = request.POST.get('tipo')
-
-        equipamento.save()
-        return redirect('listar_equipamentos')
-
-    contexto = {
-        'ativo': equipamento
-    }
-    return render(request, 'inventario/editar.html', contexto)
-
-def analisar_riscos(request):
-    motor = MotorMatematico()
-
-    motor.calcular_risco_rede()
-
-    return redirect('listar_equipamentos')
-
-def vincular_cve(request, id):
-    equipamento = Equipamento.objects.get(id=id)
-    servico = CVEService()
-    if request.method == 'POST':
-        codigo_cve = request.POST.get('cve')
-        falha = servico.buscar_e_salvar_cve(codigo_cve)
-        if falha:
-            equipamento.vulnerabilidades.add(falha)
-            return redirect('listar_equipamentos')
-
-    contexto = {
-        'ativo': equipamento
-    }
-        
-    return render(request, 'inventario/vincular_cve.html', contexto)
-
-def conexao_risco(request, id):
-    equipamentos = Equipamento.objects.get(id=id)
-    outros_equipamentos = Equipamento.objects.exclude(id=id)
-
-    if request.method == 'POST':
-        equipamento_alvo = Equipamento.objects.get(id=id)
-        equipamentos.conexoes.add(equipamento_alvo)
-        return redirect('listar_equipamentos')
-
-    contexto = {
-        'equipamentos': equipamentos,
-        'outros_equipamentos': outros_equipamentos
-    }
-    return render(request, 'inventario/conexao_risco.html', contexto)
-
-def detalhes_equipamentos(request, id):
-    ativo = Equipamento.objects.get(id=id)
-    equipamentos = Equipamento.objects.all()
-    contexto = {
-        'ativo': ativo,
-        'equipamentos': equipamentos
-    }
-    return render(request,'inventario/detalhes.html', contexto)
-
-def desconectar(request, id, conexao_id):
-    ativo = Equipamento.objects.get(id=id)
-    alvo = Equipamento.objects.get(id=conexao_id)
-    ativo.conexoes.remove(alvo)
-    return redirect('detalhes', id=id)
-
-def remover_cve(request, id, cve_code):
-    ativo = Equipamento.objects.get(id=id)
-    vuln = Vulnerabilidade.objects.get(cve_code=cve_code)
-    ativo.vulnerabilidades.remove(vuln)
-    return redirect('detalhes', id=id)
 
 class EquipamentoListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -128,9 +21,11 @@ class EquipamentoListCreate(generics.ListCreateAPIView):
         responsavel = serializer.validated_data.get('responsavel') or self.request.user
         return serializer.save(responsavel=responsavel)
 
+
 class VulnerabilidadesListCreate(generics.ListCreateAPIView):
     queryset = Vulnerabilidade.objects.all()
     serializer_class = VulnerabilidadeSerializers
+
 
 class EquipamentoDetalheAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Equipamento.objects.all()
@@ -144,6 +39,7 @@ class EquipamentoDetalheAPI(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         instance.delete()
         MotorMatematico().calcular_risco_rede()
+
 
 class AdicionarConexaoAPI(APIView):
     def post(self, request, pk):
@@ -176,21 +72,22 @@ class AdicionarConexaoAPI(APIView):
 
             serializer = EquipamentoSerializers(origem)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
+
         except Equipamento.DoesNotExist:
             return Response({"erro": "Ativo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class AdicionarCveAPI(APIView):
     def post(self, request, pk):
         try:
             origem = Equipamento.objects.get(pk=pk)
-            codigo_cve = request.data.get('id') 
-            
+            codigo_cve = request.data.get('id')
+
             servico = CVEService()
             cve = servico.buscar_e_salvar_cve(codigo_cve, request.data)
-            
+
             if cve:
                 origem.vulnerabilidades.add(cve)
 
@@ -201,7 +98,7 @@ class AdicionarCveAPI(APIView):
 
                 serializer = EquipamentoSerializers(origem)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-                
+
             else:
                 return Response({"erro": "CVE não encontrada na base do NIST"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -209,6 +106,7 @@ class AdicionarCveAPI(APIView):
             return Response({"erro": "Ativo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DashboardMetricsAPI(APIView):
     def get(self, request):
@@ -285,6 +183,7 @@ class DashboardMetricsAPI(APIView):
 
         return Response(dados, status=status.HTTP_200_OK)
 
+
 class RemoverConexaoAPI(APIView):
     def patch(self, request, pk, conexao_id):
         try:
@@ -317,6 +216,7 @@ class RemoverConexaoAPI(APIView):
         except ConexaoRede.DoesNotExist:
             return Response({"erro": "Conexão não encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
+
 class RemoverCveAPI(APIView):
     def delete(self, request, pk, cve_code):
         try:
@@ -333,6 +233,7 @@ class RemoverCveAPI(APIView):
             return Response({"erro": "ativo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except Vulnerabilidade.DoesNotExist:
             return Response({"erro": "vulnerabilidade não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class TestarPingAPI(APIView):
     def post(self, request, pk):
