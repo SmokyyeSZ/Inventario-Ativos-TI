@@ -10,12 +10,18 @@ from .cve_service import CVEService
 from rest_framework.permissions import IsAuthenticated
 
 
+def obter_equipamentos_do_usuario(user):
+    if user.is_superuser:
+        return Equipamento.objects.all()
+    return Equipamento.objects.filter(responsavel=user)
+
+
 class EquipamentoListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = EquipamentoSerializers
 
     def get_queryset(self):
-        return Equipamento.objects.filter(responsavel=self.request.user)
+        return obter_equipamentos_do_usuario(self.request.user)
 
     def perform_create(self, serializer):
         responsavel = serializer.validated_data.get('responsavel') or self.request.user
@@ -23,13 +29,21 @@ class EquipamentoListCreate(generics.ListCreateAPIView):
 
 
 class VulnerabilidadesListCreate(generics.ListCreateAPIView):
-    queryset = Vulnerabilidade.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = VulnerabilidadeSerializers
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Vulnerabilidade.objects.all()
+        return Vulnerabilidade.objects.filter(equipamento__responsavel=self.request.user).distinct()
 
 
 class EquipamentoDetalheAPI(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Equipamento.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = EquipamentoSerializers
+
+    def get_queryset(self):
+        return obter_equipamentos_do_usuario(self.request.user)
 
     def perform_update(self, serializer):
         instancia = serializer.save()
@@ -42,9 +56,11 @@ class EquipamentoDetalheAPI(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AdicionarConexaoAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, pk):
         try:
-            origem = Equipamento.objects.get(pk=pk)
+            origem = obter_equipamentos_do_usuario(request.user).get(pk=pk)
             destino_id = request.data.get('destino_id')
             destino = Equipamento.objects.get(pk=destino_id)
 
@@ -80,9 +96,11 @@ class AdicionarConexaoAPI(APIView):
 
 
 class AdicionarCveAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, pk):
         try:
-            origem = Equipamento.objects.get(pk=pk)
+            origem = obter_equipamentos_do_usuario(request.user).get(pk=pk)
             codigo_cve = request.data.get('id')
 
             servico = CVEService()
@@ -109,8 +127,11 @@ class AdicionarCveAPI(APIView):
 
 
 class DashboardMetricsAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        ativos = list(Equipamento.objects.all())
+        ativos_qs = obter_equipamentos_do_usuario(request.user)
+        ativos = list(ativos_qs)
         n = len(ativos)
 
         if n == 0:
@@ -157,7 +178,7 @@ class DashboardMetricsAPI(APIView):
         nomes_ativos = [ativo.nome for ativo in ativos]
 
         cves_ativas = (
-            Vulnerabilidade.objects.filter(equipamento__isnull=False)
+            Vulnerabilidade.objects.filter(equipamento__in=ativos_qs)
             .exclude(status__iexact='Corrigido')
             .distinct()
             .count()
@@ -185,8 +206,11 @@ class DashboardMetricsAPI(APIView):
 
 
 class RemoverConexaoAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def patch(self, request, pk, conexao_id):
         try:
+            obter_equipamentos_do_usuario(request.user).get(pk=pk)
             conexao = ConexaoRede.objects.get(id=conexao_id)
             conexao.porta = request.data.get('porta', conexao.porta)
             conexao.protocolo = request.data.get('protocolo', conexao.protocolo)
@@ -197,12 +221,14 @@ class RemoverConexaoAPI(APIView):
 
             MotorMatematico().calcular_risco_rede()
             return Response(status=status.HTTP_200_OK)
+        except Equipamento.DoesNotExist:
+            return Response({"erro": "Ativo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except ConexaoRede.DoesNotExist:
             return Response({"erro": "Conexão não encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, pk, conexao_id):
         try:
-            origem = Equipamento.objects.get(pk=pk)
+            obter_equipamentos_do_usuario(request.user).get(pk=pk)
             conexao = ConexaoRede.objects.get(id=conexao_id)
             conexao.delete()
 
@@ -218,9 +244,11 @@ class RemoverConexaoAPI(APIView):
 
 
 class RemoverCveAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def delete(self, request, pk, cve_code):
         try:
-            origem = Equipamento.objects.get(pk=pk)
+            origem = obter_equipamentos_do_usuario(request.user).get(pk=pk)
             vuln = Vulnerabilidade.objects.get(cve_code=cve_code)
             origem.vulnerabilidades.remove(vuln)
 
@@ -236,9 +264,11 @@ class RemoverCveAPI(APIView):
 
 
 class TestarPingAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, pk):
         try:
-            ativo = Equipamento.objects.get(pk=pk)
+            ativo = obter_equipamentos_do_usuario(request.user).get(pk=pk)
             portas = list(ativo.conexoes_origem.values_list('porta', flat=True).distinct())
             if not portas:
                 portas = [22, 80, 443]
