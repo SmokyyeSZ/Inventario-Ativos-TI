@@ -1,8 +1,13 @@
 services:
   backend:
     build: .
-    
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
       - "2215:80"
+
