@@ -1,4 +1,6 @@
 import numpy as np
+from django.db import transaction
+from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,6 +18,14 @@ def obter_equipamentos_do_usuario(user):
     return Equipamento.objects.filter(responsavel=user)
 
 
+def inverter_direcao(direcao: str) -> str:
+    if direcao == 'Outbound':
+        return 'Inbound'
+    if direcao == 'Inbound':
+        return 'Outbound'
+    return 'Bidirecional'
+
+
 class EquipamentoListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = EquipamentoSerializers
@@ -25,7 +35,10 @@ class EquipamentoListCreate(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         responsavel = serializer.validated_data.get('responsavel') or self.request.user
-        return serializer.save(responsavel=responsavel)
+        instancia = serializer.save(responsavel=responsavel)
+        MotorMatematico().calcular_risco_rede()
+        instancia.refresh_from_db()
+        return instancia
 
 
 class VulnerabilidadesListCreate(generics.ListCreateAPIView):
@@ -70,20 +83,37 @@ class AdicionarConexaoAPI(APIView):
             direcao = request.data.get('direcao', 'Bidirecional')
             status_conn = request.data.get('status', 'Ativa')
 
-            ConexaoRede.objects.update_or_create(
-                origem=origem,
-                destino=destino,
-                defaults={
-                    'peso_propagacao': peso,
-                    'porta': porta,
-                    'protocolo': protocolo,
-                    'direcao': direcao,
-                    'status': status_conn,
-                }
-            )
+            with transaction.atomic():
+                # Verifica se já existe a conexão cadastrada no sentido inverso (destino -> origem)
+                conexao_inversa = ConexaoRede.objects.filter(origem=destino, destino=origem).first()
+                if conexao_inversa:
+                    conexao_inversa.peso_propagacao = peso
+                    conexao_inversa.porta = porta
+                    conexao_inversa.protocolo = protocolo
+                    conexao_inversa.direcao = inverter_direcao(direcao)
+                    conexao_inversa.status = status_conn
+                    conexao_inversa.save()
+                else:
+                    ConexaoRede.objects.update_or_create(
+                        origem=origem,
+                        destino=destino,
+                        defaults={
+                            'peso_propagacao': peso,
+                            'porta': porta,
+                            'protocolo': protocolo,
+                            'direcao': direcao,
+                            'status': status_conn,
+                        }
+                    )
 
-            motor = MotorMatematico()
-            motor.calcular_risco_rede()
+                motor = MotorMatematico()
+                if motor.calcular_risco_rede() is None:
+                    transaction.set_rollback(True)
+                    return Response(
+                        {"erro": "Matriz de dependências não invertível"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             origem.refresh_from_db()
 
             serializer = EquipamentoSerializers(origem)
@@ -171,7 +201,7 @@ class DashboardMetricsAPI(APIView):
         try:
             autovalores = np.linalg.eigvals(matriz_A)
             lambda_max = max(abs(autovalores))
-        except:
+        except Exception:
             lambda_max = 0.0
 
         vetor_x = [ativo.risco_final for ativo in ativos]
@@ -210,21 +240,39 @@ class RemoverConexaoAPI(APIView):
 
     def patch(self, request, pk, conexao_id):
         try:
-            obter_equipamentos_do_usuario(request.user).get(pk=pk)
-            conexao = ConexaoRede.objects.get(id=conexao_id)
-            conexao.porta = request.data.get('porta', conexao.porta)
-            conexao.protocolo = request.data.get('protocolo', conexao.protocolo)
-            conexao.peso_propagacao = request.data.get('peso_propagacao', conexao.peso_propagacao)
-            conexao.direcao = request.data.get('direcao', conexao.direcao)
-            conexao.status = request.data.get('status', conexao.status)
-            conexao.save()
+            ativo_atual = obter_equipamentos_do_usuario(request.user).get(pk=pk)
+            with transaction.atomic():
+                conexao = ConexaoRede.objects.get(id=conexao_id)
+                conexao.porta = request.data.get('porta', conexao.porta)
+                conexao.protocolo = request.data.get('protocolo', conexao.protocolo)
+                conexao.peso_propagacao = request.data.get('peso_propagacao', conexao.peso_propagacao)
 
-            MotorMatematico().calcular_risco_rede()
+                nova_direcao = request.data.get('direcao')
+                if nova_direcao:
+                    # Se o usuário está editando a conexão a partir da tela do ativo de destino,
+                    # desfazemos a inversão de perspectiva antes de gravar no banco!
+                    if conexao.destino_id == ativo_atual.id and conexao.origem_id != ativo_atual.id:
+                        conexao.direcao = inverter_direcao(nova_direcao)
+                    else:
+                        conexao.direcao = nova_direcao
+
+                conexao.status = request.data.get('status', conexao.status)
+                conexao.save()
+
+                if MotorMatematico().calcular_risco_rede() is None:
+                    transaction.set_rollback(True)
+                    return Response(
+                        {"erro": "Matriz de dependências não invertível"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             return Response(status=status.HTTP_200_OK)
         except Equipamento.DoesNotExist:
             return Response({"erro": "Ativo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except ConexaoRede.DoesNotExist:
             return Response({"erro": "Conexão não encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"erro": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, conexao_id):
         try:
@@ -269,13 +317,18 @@ class TestarPingAPI(APIView):
     def post(self, request, pk):
         try:
             ativo = obter_equipamentos_do_usuario(request.user).get(pk=pk)
-            portas = list(ativo.conexoes_origem.values_list('porta', flat=True).distinct())
+            portas = list(
+                ConexaoRede.objects.filter(Q(origem=ativo) | Q(destino=ativo))
+                .exclude(status='Bloqueada')
+                .values_list('porta', flat=True)
+                .distinct()
+            )
             if not portas:
                 portas = [22, 80, 443]
             return Response({
                 "success": True,
                 "latency_ms": 6,
-                "open_ports": portas
+                "open_ports": sorted(portas)
             }, status=status.HTTP_200_OK)
         except Equipamento.DoesNotExist:
             return Response({"erro": "Ativo não encontrado"}, status=status.HTTP_404_NOT_FOUND)

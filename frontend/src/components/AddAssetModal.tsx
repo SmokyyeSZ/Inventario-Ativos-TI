@@ -120,11 +120,10 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ isOpen, onClose, o
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1.5">Responsável</label>
+              <label className="block text-xs font-mono text-slate-400 mb-1.5">Responsável (Opcional)</label>
               <input
                 type="text"
-                required
-                placeholder="Ex: usuário responsável"
+                placeholder="Padrão: usuário logado"
                 value={responsavel}
                 onChange={(e) => setResponsavel(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-cyan-500"

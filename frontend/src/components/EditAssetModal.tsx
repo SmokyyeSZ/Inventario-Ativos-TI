@@ -18,7 +18,6 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
   const [responsavel, setResponsavel] = useState(asset.responsavel || '');
   const [tipo, setTipo] = useState(asset.tipo);
   const [sistemaOperacional, setSistemaOperacional] = useState(asset.sistemaOperacional || '');
-  const [riscoFinal, setRiscoFinal] = useState<number>(asset.riscoFinal);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -35,7 +34,6 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
         ip: ip.trim(),
         mac: mac.trim(),
         sistemaOperacional: sistemaOperacional.trim(),
-        riscoFinal: Number(riscoFinal),
         tipo,
         responsavel: responsavel.trim(),
       });
@@ -132,10 +130,10 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-mono text-slate-400 mb-1.5">Responsável</label>
+              <label className="block text-xs font-mono text-slate-400 mb-1.5">Responsável (Opcional)</label>
               <input
                 type="text"
-                required
+                placeholder="Padrão: usuário logado"
                 value={responsavel}
                 onChange={(e) => setResponsavel(e.target.value)}
                 className="w-full px-3 py-2 bg-[#060911] border border-slate-700 rounded-lg text-sm text-slate-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
@@ -174,17 +172,12 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ asset, isOpen, o
 
             <div>
               <label className="block text-xs font-mono text-slate-400 mb-1.5">
-                Risco Final Calculado: <span className="text-rose-400 font-bold tabular-nums">{riscoFinal.toFixed(1)}</span>
+                Risco Final (Calculado pelo Motor)
               </label>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="0.1"
-                value={riscoFinal}
-                onChange={(e) => setRiscoFinal(parseFloat(e.target.value))}
-                className="w-full accent-rose-500"
-              />
+              <div className="w-full px-3 py-2 bg-[#060911]/60 border border-slate-800 rounded-lg text-sm font-mono flex items-center justify-between">
+                <span className="text-slate-400 text-xs">Spectral Score:</span>
+                <span className="text-rose-400 font-bold tabular-nums">{asset.riscoFinal.toFixed(2)} / 10.0</span>
+              </div>
             </div>
           </div>
 

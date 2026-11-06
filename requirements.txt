@@ -16,3 +16,6 @@ tzdata==2026.5
 urllib3==2.8.0
 gunicorn==21.2.0
 djangorestframework-simplejwt
+pytest>=9.0.0
+pytest-django>=4.10.0
+colorama>=0.4.6

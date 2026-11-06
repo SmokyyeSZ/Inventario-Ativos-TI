@@ -1,12 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Server,
-  AlertTriangle,
   Activity,
   Layers,
-  ArrowUpRight,
   ShieldAlert,
-  Flame,
   ArrowRight
 } from 'lucide-react';
 import { Asset, RiskPropagationMetrics } from '../types';
@@ -32,6 +29,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onPropagationSpeedChange,
   onGoToInventory,
 }) => {
+  // Cálculo automático de posicionamento:
+  // Matrizes com 4 ou mais ativos (ou nomes longos) ficam espremidas numa coluna estreita,
+  // então calculamos a largura ideal e posicionamos a Matriz em uma seção ampla dedicada abaixo,
+  // mantendo a Centralidade por Autovetor e os Top Alvos alinhados ao lado da Topologia!
+  const numNodes = metrics.heatmap.labels.length;
+  const maxLabelLen = metrics.heatmap.labels.reduce((acc, l) => Math.max(acc, l.length), 0);
+  const autoExpandMatrix = numNodes >= 4 || (numNodes >= 3 && maxLabelLen > 10);
+
+  const [manualOverride, setManualOverride] = useState<boolean | null>(null);
+  const isMatrixExpanded = manualOverride !== null ? manualOverride : autoExpandMatrix;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -120,9 +128,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
+      {/* Linha Principal: Topologia de Rede + Painel Lateral Adaptativo */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-7 xl:col-span-8 min-h-[480px]">
-
+        <div className={isMatrixExpanded ? 'lg:col-span-8 min-h-[480px]' : 'lg:col-span-7 min-h-[480px]'}>
           <NetworkTopologyGraph
             assets={assets}
             onSelectAsset={onSelectAsset}
@@ -132,14 +140,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           />
         </div>
 
-        <div className="lg:col-span-5 xl:col-span-4">
+        <div className={isMatrixExpanded ? 'lg:col-span-4 flex flex-col' : 'lg:col-span-5 flex flex-col'}>
           <RiskHeatmapMatrix
             metrics={metrics}
             assets={assets}
             onSelectAsset={onSelectAsset}
+            mode={isMatrixExpanded ? 'centrality-only' : 'combined'}
+            isExpanded={isMatrixExpanded}
+            onToggleExpand={() => setManualOverride(!isMatrixExpanded)}
           />
         </div>
       </div>
+
+      {/* Quando a matriz possui muitos nós (ou modo expandido ativo), ela ocupa largura ampla sem ficar espremida */}
+      {isMatrixExpanded && (
+        <RiskHeatmapMatrix
+          metrics={metrics}
+          assets={assets}
+          onSelectAsset={onSelectAsset}
+          mode="matrix-only"
+          isExpanded={true}
+          onToggleExpand={() => setManualOverride(false)}
+        />
+      )}
 
       <div className="bg-[#070b13] border border-slate-800 rounded-xl p-5 shadow-lg">
         <div className="flex items-center justify-between mb-4">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import {
   Edit3,
   ShieldAlert,
@@ -24,10 +25,10 @@ interface EquipmentDetailsProps {
   onOpenEdit: () => void;
   onOpenLinkCve: () => void;
   onOpenConnect: () => void;
-  onUnlinkCve: (cveId: string) => void;
-  onAddConnection: (connection: NetworkConnection) => void;
-  onUpdateConnection: (connId: string, connection: Partial<NetworkConnection>) => void;
-  onDeleteConnection: (connId: string) => void;
+  onUnlinkCve: (cveId: string) => Promise<void> | void;
+  onAddConnection: (connection: NetworkConnection) => Promise<void> | void;
+  onUpdateConnection: (connId: string, connection: Partial<NetworkConnection>) => Promise<void> | void;
+  onDeleteConnection: (connId: string) => Promise<void> | void;
 }
 
 export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
@@ -45,6 +46,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
   const otherAssets = allAssets.filter((a) => String(a.id) !== String(asset.id));
   const [showAddConn, setShowAddConn] = useState(false);
   const [editingConnId, setEditingConnId] = useState<string | null>(null);
+  const [connError, setConnError] = useState('');
   const [targetAssetId, setTargetAssetId] = useState(otherAssets[0]?.id || '');
   const [port, setPort] = useState<number | ''>(443);
   const [protocol, setProtocol] = useState('HTTPS / TLS');
@@ -58,6 +60,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
 
   const handleOpenNewConn = () => {
     setEditingConnId(null);
+    setConnError('');
     setTargetAssetId(otherAssets[0]?.id || '');
     setPort(443);
     setProtocol('HTTPS / TLS');
@@ -69,6 +72,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
 
   const handleStartEditConn = (conn: NetworkConnection) => {
     setEditingConnId(conn.id);
+    setConnError('');
     setTargetAssetId(conn.destinoId);
     setPort(conn.porta);
     setProtocol(conn.protocolo);
@@ -78,38 +82,49 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
     setShowAddConn(true);
   };
 
-  const handleCreateConnection = (e: React.FormEvent) => {
+  const handleCreateConnection = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingConnId) {
-      onUpdateConnection(editingConnId, {
+    setConnError('');
+    try {
+      if (editingConnId) {
+        await onUpdateConnection(editingConnId, {
+          porta: Number(port) || 443,
+          protocolo: protocol,
+          pesoPropagacao: Number(weight),
+          direcao: direction,
+          status: connStatus,
+        });
+        setEditingConnId(null);
+        setShowAddConn(false);
+        return;
+      }
+
+      const targetAsset = otherAssets.find((a) => String(a.id) === String(selectedTargetId));
+      if (!targetAsset) return;
+
+      const newConn: NetworkConnection = {
+        id: `conn-${Date.now().toString().slice(-4)}`,
+        origemId: asset.id,
+        destinoId: targetAsset.id,
+        destinoNome: targetAsset.nome,
         porta: Number(port) || 443,
         protocolo: protocol,
         pesoPropagacao: Number(weight),
         direcao: direction,
         status: connStatus,
-      });
-      setEditingConnId(null);
+      };
+
+      await onAddConnection(newConn);
       setShowAddConn(false);
-      return;
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.erro) {
+        setConnError(String(err.response.data.erro));
+      } else if (err instanceof Error) {
+        setConnError(err.message);
+      } else {
+        setConnError('Falha ao salvar conexão de rede.');
+      }
     }
-
-    const targetAsset = otherAssets.find((a) => String(a.id) === String(selectedTargetId));
-    if (!targetAsset) return;
-
-    const newConn: NetworkConnection = {
-      id: `conn-${Date.now().toString().slice(-4)}`,
-      origemId: asset.id,
-      destinoId: targetAsset.id,
-      destinoNome: targetAsset.nome,
-      porta: Number(port) || 443,
-      protocolo: protocol,
-      pesoPropagacao: Number(weight),
-      direcao: direction,
-      status: connStatus,
-    };
-
-    onAddConnection(newConn);
-    setShowAddConn(false);
   };
 
   const getRiskBorder = (score: number) => {
@@ -329,6 +344,22 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
             </button>
           </div>
 
+          {connError && (
+            <div className="mb-4 p-3 rounded-lg bg-rose-950/60 border border-rose-500/40 text-xs font-mono text-rose-300 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{connError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConnError('')}
+                className="text-rose-400 hover:text-white px-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {showAddConn && (
             <form onSubmit={handleCreateConnection} className="p-3.5 mb-4 bg-[#05080f] border border-cyan-500/40 rounded-lg space-y-3">
               <h3 className="text-xs font-mono font-bold text-cyan-300">
@@ -381,7 +412,7 @@ export const EquipmentDetails: React.FC<EquipmentDetailsProps> = ({
                   <input
                     type="range"
                     min="0.05"
-                    max="0.6"
+                    max="1.0"
                     step="0.05"
                     value={weight}
                     onChange={(e) => setWeight(parseFloat(e.target.value))}

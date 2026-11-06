@@ -25,6 +25,7 @@ interface GraphLink {
   source: string;
   target: string;
   weight: number;
+  direcao: 'Inbound' | 'Outbound' | 'Bidirecional';
   riskFlow: boolean;
 }
 
@@ -221,11 +222,13 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
       const srcRisk = assetRiskMap.get(srcId) ?? 0;
       const dstRisk = assetRiskMap.get(dstId) ?? 0;
       const weight = Number(conn.pesoPropagacao ?? 0.1);
+      const direcao = conn.direcao || 'Bidirecional';
 
       links.push({
         source: srcId,
         target: dstId,
         weight,
+        direcao,
         riskFlow:
           srcRisk >= 7.0 ||
           dstRisk >= 7.0 ||
@@ -364,21 +367,25 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
             const nx = -dy / dist;
             const ny = dx / dist;
 
-            // Curva suave única sem linhas duplicadas
+            // Curva suave única com caminhos direcionais (Ida: Outbound, Volta: Inbound, Ambos: Bidirecional)
             const bendSign = sNode.y <= tNode.y ? 1 : -1;
             const bendAmount = Math.min(dist * 0.1, 18) * bendSign;
             const cx = (sNode.x + tNode.x) / 2 + nx * bendAmount;
             const cy = (sNode.y + tNode.y) / 2 + ny * bendAmount;
-            const mainPath = `M${sNode.x},${sNode.y} Q${cx},${cy} ${tNode.x},${tNode.y}`;
+            const forwardPath = `M${sNode.x},${sNode.y} Q${cx},${cy} ${tNode.x},${tNode.y}`;
+            const reversePath = `M${tNode.x},${tNode.y} Q${cx},${cy} ${sNode.x},${sNode.y}`;
 
             const labelX = 0.25 * sNode.x + 0.5 * cx + 0.25 * tNode.x;
             const labelY = 0.25 * sNode.y + 0.5 * cy + 0.25 * tNode.y;
+            const animDuration = `${Math.max(1.4 / propagationSpeed, 0.45)}s`;
+            const dirSymbol =
+              link.direcao === 'Outbound' ? '→' : link.direcao === 'Inbound' ? '←' : '↔';
 
             return (
               <g key={`link-${idx}`}>
                 {isRisk && (
                   <path
-                    d={mainPath}
+                    d={forwardPath}
                     fill="none"
                     stroke="#ef4444"
                     strokeWidth="4.5"
@@ -388,18 +395,38 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
                 )}
 
                 <path
-                  d={mainPath}
+                  d={forwardPath}
                   fill="none"
                   stroke={isRisk ? 'url(#riskLineGrad)' : 'url(#neutralLineGrad)'}
-                  strokeWidth={isRisk ? 2.0 : 1.2}
+                  strokeWidth={isRisk ? 2.0 : 1.4}
                   strokeDasharray={isRisk ? '5 3' : undefined}
                 />
 
-                {isRisk && (
-                  <circle r="3" fill="#ef4444" filter="url(#glow)">
+                {/* Bolinha animada respeitando a direção escolhida pelo usuário */}
+                {(link.direcao === 'Outbound' || link.direcao === 'Bidirecional') && (
+                  <circle
+                    r={isRisk ? '3.2' : '2.6'}
+                    fill={isRisk ? '#ef4444' : '#f43f5e'}
+                    filter="url(#glow)"
+                  >
                     <animateMotion
-                      path={mainPath}
-                      dur={`${Math.max(1.4 / propagationSpeed, 0.45)}s`}
+                      path={forwardPath}
+                      dur={animDuration}
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                )}
+
+                {(link.direcao === 'Inbound' || link.direcao === 'Bidirecional') && (
+                  <circle
+                    r={isRisk ? '3.2' : '2.6'}
+                    fill={isRisk ? '#ef4444' : '#f43f5e'}
+                    filter="url(#glow)"
+                  >
+                    <animateMotion
+                      path={reversePath}
+                      dur={animDuration}
+                      begin={link.direcao === 'Bidirecional' ? `${Math.max(0.7 / propagationSpeed, 0.22)}s` : '0s'}
                       repeatCount="indefinite"
                     />
                   </circle>
@@ -407,24 +434,24 @@ export const NetworkTopologyGraph: React.FC<NetworkTopologyGraphProps> = ({
 
                 <g transform={`translate(${labelX}, ${labelY})`}>
                   <rect
-                    x="-11"
+                    x="-16"
                     y="-6"
-                    width="22"
-                    height="11"
+                    width="32"
+                    height="12"
                     rx="3"
                     fill="#070b13"
-                    fillOpacity="0.9"
+                    fillOpacity="0.92"
                   />
                   <text
                     x="0"
                     y="2.5"
                     textAnchor="middle"
                     fill={isRisk ? '#fca5a5' : '#94a3b8'}
-                    fontSize="8.5"
+                    fontSize="8"
                     fontFamily="monospace"
                     className="tabular-nums"
                   >
-                    {link.weight.toFixed(1)}
+                    {link.weight.toFixed(2)} {dirSymbol}
                   </text>
                 </g>
               </g>

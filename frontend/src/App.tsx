@@ -126,7 +126,7 @@ export const App: React.FC = () => {
     await loadData();
   };
 
-  const handleLinkCve = async (cve: CveItem) => {
+  const handleLinkCve = async (cve: Partial<CveItem> & { id: string; modo?: 'api' | 'manual' }) => {
     if (!selectedAsset) return;
     await linkCveToAssetOnServer(selectedAsset.id, cve);
     await loadData(selectedAsset.id);
